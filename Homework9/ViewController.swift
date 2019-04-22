@@ -142,144 +142,108 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
     }
     
     @objc func search_query(sender: UIButton!) {
-        product_keyword = product_keyword_textfield.text!
         product_category = product_category_selector.text!
+        product_keyword = product_keyword_textfield.text!
+        zip_code = zipcode_textfield.text!
         
         if (product_keyword.trimmingCharacters(in: CharacterSet.whitespaces)).isEmpty {
             show_toast_message(message: "Keyword Is Mandatory")
-        } else if custom_location_switch.isOn && (zip_code.trimmingCharacters(in: CharacterSet.whitespaces)).isEmpty {
-            show_toast_message(message: "Zipcode Is Mandatory")
-        } else {
-            self.performSegue(withIdentifier: "product_list_segue", sender: self)
+            return
         }
+        
+        if custom_location_switch.isOn && (zip_code.trimmingCharacters(in: CharacterSet.whitespaces)).isEmpty {
+            show_toast_message(message: "Zipcode Is Mandatory")
+            return
+        }
+        
+        self.performSegue(withIdentifier: "product_list_segue", sender: self)
+        
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "product_list_segue" {
+        switch segue.identifier {
+        case "product_list_segue":
             let product_list_view_controller = segue.destination as! ProductListViewController
             product_list_view_controller.product_keyword = product_keyword
             product_list_view_controller.product_category = product_category
+            product_list_view_controller.distance = distance
+            product_list_view_controller.zip_code = zip_code
             product_list_view_controller.new_condition = String(new_condition)
             product_list_view_controller.used_condition = String(used_condition)
             product_list_view_controller.unspecified_condition = String(unspecified_condition)
             product_list_view_controller.local_pickup = String(local_pickup)
             product_list_view_controller.free_shipping = String(free_shipping)
-            product_list_view_controller.distance = distance
-            product_list_view_controller.zip_code = zip_code
+            break
+        default:
+            break
         }
     }
     
+    func clear_checkbox(checkbox: UIButton!,  flag: inout Bool) {
+        checkbox.isSelected = false
+        flag = false
+    }
+    
     @objc func clear_form(sender: UIButton!) {
-        product_keyword_textfield.text = ""
         product_category_selector.text = "All Categories"
-        
-        new_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-        new_checkbox.isSelected = false
-        new_condition = false
-        
-        used_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-        used_checkbox.isSelected = false
-        used_condition = false
-        
-        unspecified_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-        unspecified_checkbox.isSelected = false
-        unspecified_condition = false
-        
-        pickup_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-        pickup_checkbox.isSelected = false
-        local_pickup = false
-        
-        free_shipping_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-        free_shipping_checkbox.isSelected = false
-        free_shipping = false
-        
+        clear_checkbox(checkbox: new_checkbox, flag: &new_condition)
+        clear_checkbox(checkbox: used_checkbox, flag: &used_condition)
+        clear_checkbox(checkbox: unspecified_checkbox, flag: &unspecified_condition)
+        clear_checkbox(checkbox: pickup_checkbox, flag: &local_pickup)
+        clear_checkbox(checkbox: free_shipping_checkbox, flag: &free_shipping)
+        product_keyword_textfield.text = ""
         distance_textfield.text = ""
-        
-        custom_location_switch.isOn = false
         zipcode_textfield.text = ""
         zipcode_textfield.isHidden = true
+        custom_location_switch.isOn = false
     }
     
     @IBAction func segmented_control_change(_ sender: Any) {
         switch segmented_control.selectedSegmentIndex {
-            case 0:
-                search_form_view.isHidden = false
-                wish_list_view.isHidden = true
-                break
-            case 1:
-                search_form_view.isHidden = true
-                donePicker()
-                wish_list_view.isHidden = false
-                wish_list_empty_label.isHidden = false
-                wish_list_total_items_label.isHidden = true
-                wish_list_total_label.isHidden = true
-                break
-            default:
-                break
+        case 0:
+            search_form_view.isHidden = false
+            wish_list_view.isHidden = true
+            break
+        case 1:
+            search_form_view.isHidden = true
+            donePicker()
+            wish_list_view.isHidden = false
+            wish_list_empty_label.isHidden = false
+            wish_list_total_items_label.isHidden = true
+            wish_list_total_label.isHidden = true
+            break
+        default:
+            break
         }
+    }
+    
+    func toggle_checkbox(checkbox: UIButton!,  flag: inout Bool) {
+        flag = !flag;
+        checkbox.isSelected = !checkbox.isSelected;
+        checkbox.setBackgroundImage(UIImage(named: flag ? "checked" : "unchecked"), for: flag ? .selected:.normal)
     }
     
     @IBAction func checkbox_clicked(sender: UIButton)
     {
         // Instead of specifying each button we are just using the sender (button that invoked) the method
         switch sender {
-            case new_checkbox:
-                if new_checkbox.isSelected == true {
-                    new_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-                    new_checkbox.isSelected = false
-                    new_condition = false
-                } else {
-                    new_checkbox.setBackgroundImage(UIImage(named: "checked"), for: .selected)
-                    new_checkbox.isSelected = true
-                    new_condition = true
-                }
-                break
-            case used_checkbox:
-                if used_checkbox.isSelected == true {
-                    used_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-                    used_checkbox.isSelected = false
-                    used_condition = false
-                } else {
-                    used_checkbox.setBackgroundImage(UIImage(named: "checked"), for: .selected)
-                    used_checkbox.isSelected = true
-                    used_condition = true
-                }
-                break
-            case unspecified_checkbox:
-                if unspecified_checkbox.isSelected == true {
-                    unspecified_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-                    unspecified_checkbox.isSelected = false
-                    unspecified_condition = false
-                } else {
-                    unspecified_checkbox.setBackgroundImage(UIImage(named: "checked"), for: .selected)
-                    unspecified_checkbox.isSelected = true
-                    unspecified_condition = true
-                }
-                break
-            case pickup_checkbox:
-                if pickup_checkbox.isSelected == true {
-                    pickup_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-                    pickup_checkbox.isSelected = false
-                    local_pickup = false
-                } else {
-                    pickup_checkbox.setBackgroundImage(UIImage(named: "checked"), for: .selected)
-                    pickup_checkbox.isSelected = true
-                    local_pickup = true
-                }
-                break
-            case free_shipping_checkbox:
-                if free_shipping_checkbox.isSelected == true {
-                    free_shipping_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-                    free_shipping_checkbox.isSelected = false
-                    free_shipping = false
-                } else {
-                    free_shipping_checkbox.setBackgroundImage(UIImage(named: "checked"), for: .selected)
-                    free_shipping_checkbox.isSelected = true
-                    free_shipping = true
-                }
-                break
-            default:
-                break
+        case new_checkbox:
+            toggle_checkbox(checkbox: new_checkbox, flag: &new_condition)
+            break
+        case used_checkbox:
+            toggle_checkbox(checkbox: used_checkbox, flag: &used_condition)
+            break
+        case unspecified_checkbox:
+            toggle_checkbox(checkbox: unspecified_checkbox, flag: &unspecified_condition)
+            break
+        case pickup_checkbox:
+            toggle_checkbox(checkbox: pickup_checkbox, flag: &local_pickup)
+            break
+        case free_shipping_checkbox:
+            toggle_checkbox(checkbox: free_shipping_checkbox, flag: &free_shipping)
+            break
+        default:
+            break
         }
     }
 }
