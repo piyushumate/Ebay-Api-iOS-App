@@ -20,11 +20,6 @@
 		3BD1DAFE1F3E6C9E4EB0F2099B6D6FA2 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A0CD490842D1267AC36524009F7A9B2A /* Foundation.framework */; };
 		3E0749AF6C51BCF0E4A41CF1D6A76FED /* DispatchQueue+Alamofire.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9587945E1F4F86C78DF90C0F4BD8CC78 /* DispatchQueue+Alamofire.swift */; };
 		5781B9647AABAD3F45181957FD3AF814 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B23E6659060337F19196726F1CEA06A0 /* UIKit.framework */; };
-		5C842AD7226E241A0054C44F /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 172E1682595E5A0BE6B059738C169EBA /* Toast.swift */; };
-		5C842AD8226E241B0054C44F /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 172E1682595E5A0BE6B059738C169EBA /* Toast.swift */; };
-		5C842AD9226E241D0054C44F /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 172E1682595E5A0BE6B059738C169EBA /* Toast.swift */; };
-		5C842ADA226E241E0054C44F /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 172E1682595E5A0BE6B059738C169EBA /* Toast.swift */; };
-		5C842ADB226E241F0054C44F /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 172E1682595E5A0BE6B059738C169EBA /* Toast.swift */; };
 		60B6C2A003864AAD3A426448152F67BE /* Timeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA9405A896B71474B1D96558C3D02FF /* Timeline.swift */; };
 		60FC8A462B7D4E4A88D87CB57038D080 /* Pods-Homework9-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = A854DEADE92BC8C55CD48D053C29C3EB /* Pods-Homework9-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6EFD003458AE7F689DEA720A2030C261 /* ResponseSerialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82ACB29C9B1166CA6D81CC490DE34B21 /* ResponseSerialization.swift */; };
@@ -695,7 +690,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1707D23E8DB3B67F21F7CC5D458FAB9D /* SwiftyJSON-dummy.m in Sources */,
-				5C842AD7226E241A0054C44F /* Toast.swift in Sources */,
 				AC4204EF484988486C5F84122D958B5C /* SwiftyJSON.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -714,7 +708,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F0AD859A962890CFFEBF16798CD719FB /* Pods-Homework9-dummy.m in Sources */,
-				5C842AD9226E241D0054C44F /* Toast.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -723,7 +716,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1017E2AEF51EA1A10EFCF24A5082F50B /* McPicker-dummy.m in Sources */,
-				5C842ADA226E241E0054C44F /* Toast.swift in Sources */,
 				DF9A7344124FE703A335AD99DFB65634 /* McPicker.swift in Sources */,
 				A98715E00B98CE63933A01BD0FE2269D /* McPickerBarButtonItem.swift in Sources */,
 				81B28BBF529D24EDED685518DE4FA9BD /* McPickerPopoverViewController.swift in Sources */,
@@ -736,7 +728,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				A9CA2602049DF91BF1D332CC0491232A /* SwiftSpinner-dummy.m in Sources */,
-				5C842AD8226E241B0054C44F /* Toast.swift in Sources */,
 				881123EDB705A75BA3B713D0AC29C672 /* SwiftSpinner.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -748,7 +739,6 @@
 				7E3538A6992A38276764936A9733493D /* AFError.swift in Sources */,
 				772911DA6E33D1CBBC30131B7C8BDBB3 /* Alamofire-dummy.m in Sources */,
 				0A39AF55285A3A4F7CBABB6D822FA4A3 /* Alamofire.swift in Sources */,
-				5C842ADB226E241F0054C44F /* Toast.swift in Sources */,
 				3E0749AF6C51BCF0E4A41CF1D6A76FED /* DispatchQueue+Alamofire.swift in Sources */,
 				AEA829AB1A8AF2AD077A808AED6B178A /* MultipartFormData.swift in Sources */,
 				73AB05789A4982944AF68DBD013E3EB7 /* NetworkReachabilityManager.swift in Sources */,

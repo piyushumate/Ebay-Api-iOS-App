@@ -36,12 +36,21 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
 //        // Do any additional setup after loading the view.
 //    }
 
+    
     var selected_product_id = ""
-    var global_shipping = ""
-    var handling_time = "1"
+    var selected_product_name = ""
+    var selected_product_image = ""
+    var price = ""
+    var currency_symbol = ""
     var shipping = ""
     var shipping_symbol = ""
-    var selected_product_name = ""
+    var zip = ""
+    var condition = ""
+    var global_shipping = ""
+    var handling_time = "1"
+    
+    var item_url = ""
+    var selected_product_price = ""
     
     var product_info_dictionary = Dictionary<String,Any> ()
     
@@ -59,7 +68,48 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
         tableView.delegate = self
         scroll_view.delegate = self
         self.view.addSubview(tableView)
+    
+        let facebook_button = UIButton.init(type: .custom)
+        facebook_button.setImage(UIImage.init(named: "facebook")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
+        facebook_button.addTarget(self, action:#selector(facebook_share), for:.touchUpInside)
+        facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
+        let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
         
+        if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
+            var wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
+            if wishlist.count != 0 {
+                //                print(wishlist[String(sender.tag)])
+                if wishlist[self.selected_product_id] != nil {
+                    let wish_list_button = UIButton.init(type: .custom)
+                    wish_list_button.setImage(UIImage.init(named: "wishListFilled")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
+                    wish_list_button.addTarget(self, action:#selector(wish_list), for:.touchUpInside)
+                    wish_list_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
+                    let wish_list_bar_button = UIBarButtonItem.init(customView: wish_list_button)
+                    self.tabBarController?.navigationItem.rightBarButtonItems = [wish_list_bar_button, facebook_bar_button]
+                } else {
+                    let wish_list_button = UIButton.init(type: .custom)
+                    wish_list_button.setImage(UIImage.init(named: "wishListEmpty")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
+                    wish_list_button.addTarget(self, action:#selector(wish_list), for:.touchUpInside)
+                    wish_list_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
+                    let wish_list_bar_button = UIBarButtonItem.init(customView: wish_list_button)
+                    self.tabBarController?.navigationItem.rightBarButtonItems = [wish_list_bar_button, facebook_bar_button]
+                }
+            } else {
+                let wish_list_button = UIButton.init(type: .custom)
+                wish_list_button.setImage(UIImage.init(named: "wishListEmpty")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
+                wish_list_button.addTarget(self, action:#selector(wish_list), for:.touchUpInside)
+                wish_list_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
+                let wish_list_bar_button = UIBarButtonItem.init(customView: wish_list_button)
+                self.tabBarController?.navigationItem.rightBarButtonItems = [wish_list_bar_button, facebook_bar_button]
+            }
+        }  else {
+            let wish_list_button = UIButton.init(type: .custom)
+            wish_list_button.setImage(UIImage.init(named: "wishListEmpty")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
+            wish_list_button.addTarget(self, action:#selector(wish_list), for:.touchUpInside)
+            wish_list_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
+            let wish_list_bar_button = UIBarButtonItem.init(customView: wish_list_button)
+            self.tabBarController?.navigationItem.rightBarButtonItems = [wish_list_bar_button, facebook_bar_button]
+        }
 //        print(self.global_shipping)
 //        print(self.handling_time)
 //        print(self.selected_product_id)
@@ -169,7 +219,7 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
                 if self.required_product_info["Price"] != nil {
                     var currency_symbol = ""
                     let price_dictionary = self.required_product_info["Price"] as! [String: Any]
-                    let price = String(describing: price_dictionary["__value__"]!)
+                    let product_price = String(describing: price_dictionary["__value__"]!)
                     let symbol = String(describing: price_dictionary["@currencyId"]!)
                     var locale = NSLocale(localeIdentifier: symbol)
                     if locale.displayName(forKey: .currencySymbol, value: symbol) == symbol {
@@ -178,11 +228,13 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
                     } else {
                         currency_symbol = locale.displayName(forKey: .currencySymbol, value: symbol)!
                     }
-                    self.product_price?.text = (currency_symbol + price)
+                    self.product_price?.text = (currency_symbol + product_price)
+                    self.selected_product_price = (currency_symbol + product_price)
                     self.required_product_info.removeValue(forKey: "Price")
                 }
                 
                 if self.required_product_info["ViewItemURLForNaturalSearch"] != nil {
+                    self.item_url = self.required_product_info["ViewItemURLForNaturalSearch"] as! String
                     self.required_product_info.removeValue(forKey: "ViewItemURLForNaturalSearch")
                 }
                 
@@ -198,21 +250,94 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
                 // Passing data to other tabs
                 let product_information_tab = self.tabBarController?.viewControllers![0] as! ProductInformation
                 product_information_tab.required_product_info = self.required_product_info
+                product_information_tab.selected_product_id = self.selected_product_id
+                product_information_tab.selected_product_name = self.selected_product_name
+                product_information_tab.selected_product_image = self.selected_product_image
+                product_information_tab.price = self.price
+                product_information_tab.currency_symbol = self.currency_symbol
+                product_information_tab.shipping = self.shipping
+                product_information_tab.shipping_symbol = self.shipping_symbol
+                product_information_tab.zip = self.zip
+                product_information_tab.condition = self.condition
+                product_information_tab.global_shipping = self.global_shipping
+                product_information_tab.handling_time = self.handling_time
+                product_information_tab.item_url = self.item_url
+                product_information_tab.selected_product_price = self.selected_product_price
                 
                 let product_shipping_tab = self.tabBarController?.viewControllers![1] as! ProductShippingInformation
                 product_shipping_tab.shipping_info_dictionary = self.shipping_info_dictionary
+                product_shipping_tab.selected_product_id = self.selected_product_id
+                product_shipping_tab.selected_product_name = self.selected_product_name
+                product_shipping_tab.selected_product_image = self.selected_product_image
+                product_shipping_tab.price = self.price
+                product_shipping_tab.currency_symbol = self.currency_symbol
+                product_shipping_tab.shipping = self.shipping
+                product_shipping_tab.shipping_symbol = self.shipping_symbol
+                product_shipping_tab.zip = self.zip
+                product_shipping_tab.condition = self.condition
+                product_shipping_tab.global_shipping = self.global_shipping
+                product_shipping_tab.handling_time = self.handling_time
+                product_shipping_tab.item_url = self.item_url
+                product_shipping_tab.selected_product_price = self.selected_product_price
                 
                 let product_photos_tab = self.tabBarController?.viewControllers![2] as! ProductPhotos
+                product_photos_tab.selected_product_id = self.selected_product_id
                 product_photos_tab.selected_product_name = self.selected_product_name
+                product_photos_tab.selected_product_image = self.selected_product_image
+                product_photos_tab.price = self.price
+                product_photos_tab.currency_symbol = self.currency_symbol
+                product_photos_tab.shipping = self.shipping
+                product_photos_tab.shipping_symbol = self.shipping_symbol
+                product_photos_tab.zip = self.zip
+                product_photos_tab.condition = self.condition
+                product_photos_tab.global_shipping = self.global_shipping
+                product_photos_tab.handling_time = self.handling_time
+                product_photos_tab.item_url = self.item_url
+                product_photos_tab.selected_product_price = self.selected_product_price
                 
                 let similar_items_tab = self.tabBarController?.viewControllers![3] as! SimilarItems
                 similar_items_tab.selected_product_id = self.selected_product_id
+                similar_items_tab.selected_product_name = self.selected_product_name
+                similar_items_tab.selected_product_image = self.selected_product_image
+                similar_items_tab.price = self.price
+                similar_items_tab.currency_symbol = self.currency_symbol
+                similar_items_tab.shipping = self.shipping
+                similar_items_tab.shipping_symbol = self.shipping_symbol
+                similar_items_tab.zip = self.zip
+                similar_items_tab.condition = self.condition
+                similar_items_tab.global_shipping = self.global_shipping
+                similar_items_tab.handling_time = self.handling_time
+                similar_items_tab.item_url = self.item_url
+                similar_items_tab.selected_product_price = self.selected_product_price
+                
             } else {
                 var alert : UIAlertView = UIAlertView(title: "No Product Details!", message: "Failed to fetch search results", delegate: nil, cancelButtonTitle: "Ok")
                 alert.show()
             }
             SwiftSpinner.hide()
         }
+    }
+    
+    func show_toast_message(message : String) {
+        let toastLabel = UILabel(frame: CGRect(x: self.view.frame.size.width/11, y: self.view.frame.size.height - self.view.frame.size.height/8, width: self.view.frame.size.width/1.2, height: 300))
+        toastLabel.backgroundColor = UIColor.black.withAlphaComponent(1)
+        toastLabel.textColor = UIColor.white
+        toastLabel.textAlignment = .center
+        toastLabel.font = UIFont(name: "Montserrat-Light", size: 1.0)
+        toastLabel.text = message
+        toastLabel.adjustsFontSizeToFitWidth = true
+        toastLabel.alpha = 1.0
+        toastLabel.layer.cornerRadius = 7
+        toastLabel.clipsToBounds  =  true
+        toastLabel.lineBreakMode = .byWordWrapping
+        toastLabel.numberOfLines = 4
+        toastLabel.sizeToFit()
+        self.view.addSubview(toastLabel)
+        UIView.animate(withDuration: 5.0, delay: 0.1, options: .curveEaseOut, animations: {
+            toastLabel.alpha = 0.0
+        }, completion: {(isCompleted) in
+            toastLabel.removeFromSuperview()
+        })
     }
     
     func ebay_request(completion: @escaping(_ : Dictionary<String,Any>) -> ())
@@ -273,7 +398,166 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
         let percentageVerticalOffset: CGFloat = currentVerticalOffset / maximumVerticalOffset
     }
     
+    @objc func facebook_share(sender: UIBarButtonItem!) {
+        var search_url = "https://www.facebook.com/dialog/share?app_id=2161096860867733&display=popup&href="
+        search_url.append(self.item_url)
+        search_url.append("&quote=")
+        var message = "Buy "
+        message.append(self.selected_product_name)
+        message.append(" at ")
+        message.append(self.selected_product_price)
+        message.append(" from link below")
+        message = String(message).addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!
+        search_url.append(String(message))
+        guard let url = URL(string: String(search_url)) else { return }
+        UIApplication.shared.open(url)
+    }
     
+    @objc func wish_list(sender: UIBarButtonItem!) {
+        print("IN WISHLIST PRESSED")
+        if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
+            var wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
+            if wishlist.count != 0 {
+//                print(wishlist[String(sender.tag)])
+                if wishlist[self.selected_product_id] != nil {
+                    //Remove from wishlist
+                    print("IN REMOVE")
+                    var message = ""
+                    message += wishlist[self.selected_product_id]!.name!
+                    message += " was removed from the Wish List"
+                    show_toast_message(message: message)
+                    
+                    wishlist.removeValue(forKey: self.selected_product_id)
+                    print(wishlist)
+                    if wishlist.count == 0 {
+                        UserDefaults.standard.removeObject(forKey: "wishlist")
+                    } else {
+                        UserDefaults.standard.set(object: wishlist, forKey: "wishlist")
+                    }
+                    let facebook_button = UIButton.init(type: .custom)
+                    facebook_button.setImage(UIImage.init(named: "facebook")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
+                    facebook_button.addTarget(self, action:#selector(facebook_share), for:.touchUpInside)
+                    facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
+                    let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
+                    
+                    let wish_list_button = UIButton.init(type: .custom)
+                    wish_list_button.setImage(UIImage.init(named: "wishListEmpty")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
+                    wish_list_button.addTarget(self, action:#selector(wish_list), for:.touchUpInside)
+                    wish_list_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
+                    let wish_list_bar_button = UIBarButtonItem.init(customView: wish_list_button)
+                    self.tabBarController?.navigationItem.rightBarButtonItems = [wish_list_bar_button, facebook_bar_button]
+                } else {
+                    // Add item to wishlist
+                    print("IN ADD")
+                    var message = ""
+                    var wishlist_cell = wishlist_table_cell_contents()
+                    wishlist_cell.item_id = self.selected_product_id
+                    wishlist_cell.name = self.selected_product_name
+                    wishlist_cell.image = self.selected_product_image
+                    wishlist_cell.price = self.price
+                    wishlist_cell.currency_symbol = self.currency_symbol
+                    wishlist_cell.shipping = self.shipping
+                    wishlist_cell.shipping_symbol = self.shipping_symbol
+                    wishlist_cell.zip = self.zip
+                    wishlist_cell.condition = self.condition
+                    wishlist_cell.handling_time = self.handling_time
+                    wishlist_cell.global_shipping = self.global_shipping
+                    //                print(wishlist_cell)
+                    wishlist[self.selected_product_id] = wishlist_cell
+                    //                print(wishlist)
+                    
+                    message += self.selected_product_name
+                    message += " was added to the Wish List"
+                    show_toast_message(message: message)
+                    
+                    UserDefaults.standard.set(object: wishlist, forKey: "wishlist")
+                    let facebook_button = UIButton.init(type: .custom)
+                    facebook_button.setImage(UIImage.init(named: "facebook")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
+                    facebook_button.addTarget(self, action:#selector(facebook_share), for:.touchUpInside)
+                    facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
+                    let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
+                    
+                    let wish_list_button = UIButton.init(type: .custom)
+                    wish_list_button.setImage(UIImage.init(named: "wishListFilled")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
+                    wish_list_button.addTarget(self, action:#selector(wish_list), for:.touchUpInside)
+                    wish_list_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
+                    let wish_list_bar_button = UIBarButtonItem.init(customView: wish_list_button)
+                    self.tabBarController?.navigationItem.rightBarButtonItems = [wish_list_bar_button, facebook_bar_button]
+                }
+            } else {
+                print("IN ELSE CONDITION")
+                //Create wishlist and add in wishlist
+                var message = ""
+                var wishlist_cell = wishlist_table_cell_contents()
+                wishlist_cell.item_id = self.selected_product_id
+                wishlist_cell.name = self.selected_product_name
+                wishlist_cell.image = self.selected_product_image
+                wishlist_cell.price = self.price
+                wishlist_cell.currency_symbol = self.currency_symbol
+                wishlist_cell.shipping = self.shipping
+                wishlist_cell.shipping_symbol = self.shipping_symbol
+                wishlist_cell.zip = self.zip
+                wishlist_cell.condition = self.condition
+                wishlist_cell.handling_time = self.handling_time
+                wishlist_cell.global_shipping = self.global_shipping
+        
+                wishlist[self.selected_product_id] = wishlist_cell
+                
+                message += self.selected_product_name
+                message += " was added to the Wish List"
+                show_toast_message(message: message)
+                
+                UserDefaults.standard.set(object: wishlist, forKey: "wishlist")
+                let facebook_button = UIButton.init(type: .custom)
+                facebook_button.setImage(UIImage.init(named: "facebook")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
+                facebook_button.addTarget(self, action:#selector(facebook_share), for:.touchUpInside)
+                facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
+                let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
+                
+                let wish_list_button = UIButton.init(type: .custom)
+                wish_list_button.setImage(UIImage.init(named: "wishListFilled")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
+                wish_list_button.addTarget(self, action:#selector(wish_list), for:.touchUpInside)
+                wish_list_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
+                let wish_list_bar_button = UIBarButtonItem.init(customView: wish_list_button)
+                self.tabBarController?.navigationItem.rightBarButtonItems = [wish_list_bar_button, facebook_bar_button]
+            }
+        } else {
+            var message = ""
+            var wishlist_cell = wishlist_table_cell_contents()
+            wishlist_cell.item_id = self.selected_product_id
+            wishlist_cell.name = self.selected_product_name
+            wishlist_cell.image = self.selected_product_image
+            wishlist_cell.price = self.price
+            wishlist_cell.currency_symbol = self.currency_symbol
+            wishlist_cell.shipping = self.shipping
+            wishlist_cell.shipping_symbol = self.shipping_symbol
+            wishlist_cell.zip = self.zip
+            wishlist_cell.condition = self.condition
+            wishlist_cell.handling_time = self.handling_time
+            wishlist_cell.global_shipping = self.global_shipping
+            
+            var wishlist = [String: wishlist_table_cell_contents]()
+            wishlist[self.selected_product_id] = wishlist_cell
+            
+            message += self.selected_product_name
+            message += " was added to the Wish List"
+            show_toast_message(message: message)
+            
+            UserDefaults.standard.set(object: wishlist, forKey: "wishlist")
+            let facebook_button = UIButton.init(type: .custom)
+            facebook_button.setImage(UIImage.init(named: "facebook")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
+            facebook_button.addTarget(self, action:#selector(facebook_share), for:.touchUpInside)
+            facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
+            let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
+            
+            let wish_list_button = UIButton.init(type: .custom)
+            wish_list_button.setImage(UIImage.init(named: "wishListFilled")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
+            wish_list_button.addTarget(self, action:#selector(wish_list), for:.touchUpInside)
+            wish_list_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
+            let wish_list_bar_button = UIBarButtonItem.init(customView: wish_list_button)
+            self.tabBarController?.navigationItem.rightBarButtonItems = [wish_list_bar_button, facebook_bar_button]
+        }
+    }
     /*
     // MARK: - Navigation
 
@@ -285,5 +569,4 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
     */
 
 }
-
 
