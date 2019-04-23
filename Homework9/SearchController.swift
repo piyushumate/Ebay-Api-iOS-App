@@ -8,7 +8,7 @@
 
 import UIKit
 
-class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSource {
+class SearchController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSource {
     
     @IBOutlet weak var segmented_control: UISegmentedControl!
     @IBOutlet weak var search_form_view: UIView!
@@ -36,26 +36,39 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
     @IBOutlet weak var wish_list_empty_label: UILabel!
     
     @IBOutlet weak var wish_list_table: UITableView!
-    
+
+    let product_categories = [String] (arrayLiteral: "All Categories",
+                                       "Art",
+                                       "Baby",
+                                       "Books",
+                                       "Clothing, Shoes & Accessories",
+                                       "Computers/Tablets & Networking",
+                                       "Health & Beauty",
+                                       "Music",
+                                       "Video Games & Consoles")
+    let category_map = [
+        "All Categories": "all",
+        "Art"   :"art",
+        "Baby"  :"baby",
+        "Books" :"books",
+        "Clothing, Shoes & Accessories" :"clothing",
+        "Computers/Tablets & Networking" :"computers",
+        "Health & Beauty" :"health",
+        "Music" :"music",
+        "Video Games & Consoles" :"games"
+    ]
+
     var product_keyword = ""
     var product_category = ""
+    var zip_code = ""
+    var distance = "10"
+    
     var new_condition = false
     var used_condition = false
     var unspecified_condition = false
     var local_pickup = false
     var free_shipping = false
-    var distance = "10"
-    var zip_code = ""
-    
-    let product_categories = [String] (arrayLiteral: "All Categories",
-                                                     "Art",
-                                                     "Baby",
-                                                     "Books",
-                                                     "Clothing, Shoes & Accessories",
-                                                     "Computers/Tablets & Networking",
-                                                     "Health & Beauty",
-                                                     "Music",
-                                                     "Video Games & Consoles")
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -67,13 +80,17 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         picker_toolBar.barStyle = UIBarStyle.default
         
         picker_toolBar.isTranslucent = true
-        picker_toolBar.tintColor = UIColor(red: 0/255, green: 122/255, blue: 255/255, alpha: 1)
+        picker_toolBar.tintColor = UIColor(
+            red: 0/255,
+            green: 122/255,
+            blue: 255/255,
+            alpha: 1)
         
         picker_toolBar.sizeToFit()
         
-        let done_button = UIBarButtonItem(title: "Done", style: UIBarButtonItem.Style.plain, target: self, action: #selector(ViewController.donePicker))
+        let done_button = UIBarButtonItem(title: "Done", style: UIBarButtonItem.Style.plain, target: self, action: #selector(SearchController.donePicker))
         let space_button = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.flexibleSpace, target: nil, action: nil)
-        let cancel_button = UIBarButtonItem(title: "Cancel", style: UIBarButtonItem.Style.plain, target: self, action: #selector(ViewController.donePicker))
+        let cancel_button = UIBarButtonItem(title: "Cancel", style: UIBarButtonItem.Style.plain, target: self, action: #selector(SearchController.donePicker))
         
         picker_toolBar.setItems([cancel_button, space_button, done_button], animated: true)
         picker_toolBar.isUserInteractionEnabled = true
@@ -82,14 +99,15 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         product_category_selector.inputAccessoryView = picker_toolBar
         product_category_selector.inputView?.backgroundColor = UIColor.white
         
-        custom_location_switch.addTarget(self, action: #selector(ViewController.toggleSwitch), for: .valueChanged)
-        
+        custom_location_switch.addTarget(self, action: #selector(SearchController.toggleSwitch), for: .valueChanged)
+
+        pickup_checkbox.addTarget(self, action: #selector(checkbox_clicked(sender:)), for: .touchUpInside)
+        free_shipping_checkbox.addTarget(self, action: #selector(checkbox_clicked(sender:)), for: .touchUpInside)
+
         new_checkbox.addTarget(self, action: #selector(checkbox_clicked(sender:)), for: .touchUpInside)
         used_checkbox.addTarget(self, action: #selector(checkbox_clicked(sender:)), for: .touchUpInside)
         unspecified_checkbox.addTarget(self, action: #selector(checkbox_clicked(sender:)), for: .touchUpInside)
         
-        pickup_checkbox.addTarget(self, action: #selector(checkbox_clicked(sender:)), for: .touchUpInside)
-        free_shipping_checkbox.addTarget(self, action: #selector(checkbox_clicked(sender:)), for: .touchUpInside)
         
         search_button.addTarget(self, action: #selector(search_query), for: .touchUpInside)
         clear_button.addTarget(self, action: #selector(clear_form), for: .touchUpInside)
@@ -165,14 +183,14 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         case "product_list_segue":
             let product_list_view_controller = segue.destination as! ProductListViewController
             product_list_view_controller.product_keyword = product_keyword
-            product_list_view_controller.product_category = product_category
+            product_list_view_controller.product_category = category_map[product_category]!
             product_list_view_controller.distance = distance
             product_list_view_controller.zip_code = zip_code
+            product_list_view_controller.local_pickup = String(local_pickup)
+            product_list_view_controller.free_shipping = String(free_shipping)
             product_list_view_controller.new_condition = String(new_condition)
             product_list_view_controller.used_condition = String(used_condition)
             product_list_view_controller.unspecified_condition = String(unspecified_condition)
-            product_list_view_controller.local_pickup = String(local_pickup)
-            product_list_view_controller.free_shipping = String(free_shipping)
             break
         default:
             break

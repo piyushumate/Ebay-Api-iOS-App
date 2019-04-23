@@ -47,15 +47,10 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
     var price_list = [String]()
     var shipping_list = [String]()
     var zip_list = [String]()
+ 
     
     var input_query_parameters = [String: Any] ()
-    
-    var product_list_dictionary = Dictionary<String,Any> ()
-    var products = [products_list_table_cell_contents]()
-    var product_list = [Any]()
-    
-    var selected_index = Int()
-    
+ 
     var product_keyword = ""
     var product_category = ""
     var new_condition = ""
@@ -65,7 +60,16 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
     var free_shipping = ""
     var distance = ""
     var zip_code = ""
-    var url = "http://assignment9-env.jmt4k6j8tq.us-east-2.elasticbeanstalk.com/search_multiple_products/"
+    
+    
+    var request_url    = "http://csci571homework8-env.crc386dumd.us-east-2.elasticbeanstalk.com/products"
+    
+    
+    var product_list_dictionary = Dictionary<String,Any> ()
+    var products = [products_list_table_cell_contents]()
+    var product_list = [Any]()
+    
+    var selected_index = Int()
     
     let http_headers: HTTPHeaders = [
         "Accept": "application/json"
@@ -78,17 +82,9 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
         tableView.delegate = self
         self.view.addSubview(tableView)
         
-//        print("IN PRODUCT DETAILS")
-//        print("KEYWORD " + self.product_keyword)
-//        print("CATEGORY" + self.product_category)
-//        print("NEW" + self.new_condition)
-//        print("USED" + self.used_condition)
-//        print("UNSPECIFIED" + self.unspecified_condition)
-//        print("FREE SHIPPING " + self.free_shipping)
-//        print("PICKUP " + self.local_pickup)
-//        print("DISTANCE " + self.distance)
-        
+
         var product_condition = [String] ()
+    
         if new_condition == "true" {
             product_condition.append("New")
         }
@@ -102,32 +98,23 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
         }
         
         var shipping_options = [String: Any]  ()
-        if free_shipping == "true" {
-            shipping_options["free_shipping"] = "true"
-        } else {
-            shipping_options["free_shipping"] = "false"
-        }
+        shipping_options["FreeShippingOnly"] = free_shipping == "true" ? "true" : "false"
+        shipping_options["LocalPickupOnly"]  = local_pickup == "true" ? "true": "false"
         
-        if local_pickup == "true" {
-            shipping_options["local_pickup"] = "true"
-        } else {
-            shipping_options["local_pickup"] = "false"
-        }
-
+        
+       
         input_query_parameters = [
-            "product_keyword" : product_keyword,
-            "product_category" : "all_categories",
-            "product_condition" : product_condition,
+            "keyword" : product_keyword,
+            "category" : product_category,
+            "condition" : product_condition,
             "shipping_options" : shipping_options,
             "search_location" : "current_location"
         ]
-    
-        ebay_request{input_list in
-            self.product_list_dictionary = input_list}
+        
+        ebay_request{ input_list in self.product_list_dictionary = input_list}
         
         SwiftSpinner.show(delay: 1.0, title: "Searching...", animated: true)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) { // Change `4.0` to the desired number of seconds.
-//              print(self.product_list_dictionary)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
             if self.product_list_dictionary["data"] != nil {
                 self.product_list = self.product_list_dictionary["data"] as! [Any]
 //                print(self.product_list)
@@ -205,24 +192,28 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
     
     func ebay_request(completion: @escaping(_ : Dictionary<String,Any>) -> ())
     {
-        Alamofire.request(url, method: .post, parameters: input_query_parameters, encoding:JSONEncoding.default, headers: http_headers).responseJSON { (response:DataResponse<Any>) in
-            var result_dictionary = Dictionary<String,Any>()
+        print(input_query_parameters)
+        Alamofire.request(request_url, method: .post, parameters: input_query_parameters,
+                          encoding:JSONEncoding.default, headers: http_headers).responseJSON {
+                            (response:DataResponse<Any>) in
+            var result = Dictionary<String,Any>()
+            
             switch(response.result) {
-                case .success(_):
-                    
-                    if response.result.value != nil {
-                        result_dictionary = response.result.value! as! Dictionary<String,Any>
-    //                    print(result_dictionary)
-                    }
-                    break
-                
                 case .failure(_):
                     if response.result.error != nil {
+                        //log error
                         print(response.result.error!)
                     }
-                    break
+                break
+                case .success(_):
+                    print(response.result.value)
+                    if response.result.value != nil {
+                        result = response.result.value! as! Dictionary<String,Any>
+                    }
+                break
+                
             }
-            completion(result_dictionary)
+            completion(result)
         }
     }
     
@@ -293,17 +284,22 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
     }
     
     func show_toast_message(message : String) {
-        let toastLabel = UILabel(frame: CGRect(x: self.view.frame.size.width/2 - 100, y: self.view.frame.size.height - 100, width: 200, height: 35))
+        let toastLabel = UILabel()
+        toastLabel.frame = CGRect(
+            x: self.view.frame.size.width/2 - 100,
+            y: self.view.frame.size.height - 100,
+            width: 200,
+            height: 35)
         toastLabel.backgroundColor = UIColor.black.withAlphaComponent(0.6)
-        toastLabel.textColor = UIColor.white
-        toastLabel.textAlignment = .center;
         toastLabel.font = UIFont(name: "Montserrat-Light", size: 12.0)
         toastLabel.text = message
         toastLabel.alpha = 1.0
         toastLabel.layer.cornerRadius = 10;
+        toastLabel.textColor = UIColor.white
+        toastLabel.textAlignment = .center;
         toastLabel.clipsToBounds  =  true
         self.view.addSubview(toastLabel)
-        UIView.animate(withDuration: 4.0, delay: 0.1, options: .curveEaseOut, animations: {
+        UIView.animate(withDuration: 5.0, delay: 0.1, options: .curveEaseOut, animations: {
             toastLabel.alpha = 0.0
         }, completion: {(isCompleted) in
             toastLabel.removeFromSuperview()
@@ -311,15 +307,5 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
     }
     
     
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
 }
 
