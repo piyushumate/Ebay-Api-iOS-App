@@ -75,8 +75,8 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
         facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
         let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
         
-        if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
-            var wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
+        if UserDefaults.standard.object([String: wishlist_table_contents].self, with: "wishlist") != nil {
+            var wishlist = UserDefaults.standard.object([String: wishlist_table_contents].self, with: "wishlist") as! [String: wishlist_table_contents]
             if wishlist.count != 0 {
                 //                print(wishlist[String(sender.tag)])
                 if wishlist[self.selected_product_id] != nil {
@@ -119,7 +119,7 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
         ebay_request {product_information in
             self.product_info_dictionary = product_information}
         
-        SwiftSpinner.show(delay: 1.0, title: "Fetching Product Details...", animated: true)
+        SwiftSpinner.show(delay: 0.0, title: "Fetching Product Details...", animated: true)
         DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) { // Change `4.0` to the desired number of seconds.
 //            print(self.product_info_dictionary)
             if self.product_info_dictionary["data"] != nil {
@@ -406,17 +406,18 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
         message.append(self.selected_product_name)
         message.append(" at ")
         message.append(self.selected_product_price)
-        message.append(" from link below")
+        message.append(" from Ebay!")
         message = String(message).addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!
         search_url.append(String(message))
+        print(search_url)
         guard let url = URL(string: String(search_url)) else { return }
         UIApplication.shared.open(url)
     }
     
     @objc func wish_list(sender: UIBarButtonItem!) {
         print("IN WISHLIST PRESSED")
-        if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
-            var wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
+        if UserDefaults.standard.object([String: wishlist_table_contents].self, with: "wishlist") != nil {
+            var wishlist = UserDefaults.standard.object([String: wishlist_table_contents].self, with: "wishlist") as! [String: wishlist_table_contents]
             if wishlist.count != 0 {
 //                print(wishlist[String(sender.tag)])
                 if wishlist[self.selected_product_id] != nil {
@@ -450,7 +451,7 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
                     // Add item to wishlist
                     print("IN ADD")
                     var message = ""
-                    var wishlist_cell = wishlist_table_cell_contents()
+                    var wishlist_cell = wishlist_table_contents()
                     wishlist_cell.item_id = self.selected_product_id
                     wishlist_cell.name = self.selected_product_name
                     wishlist_cell.image = self.selected_product_image
@@ -488,7 +489,7 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
                 print("IN ELSE CONDITION")
                 //Create wishlist and add in wishlist
                 var message = ""
-                var wishlist_cell = wishlist_table_cell_contents()
+                var wishlist_cell = wishlist_table_contents()
                 wishlist_cell.item_id = self.selected_product_id
                 wishlist_cell.name = self.selected_product_name
                 wishlist_cell.image = self.selected_product_image
@@ -523,7 +524,7 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
             }
         } else {
             var message = ""
-            var wishlist_cell = wishlist_table_cell_contents()
+            var wishlist_cell = wishlist_table_contents()
             wishlist_cell.item_id = self.selected_product_id
             wishlist_cell.name = self.selected_product_name
             wishlist_cell.image = self.selected_product_image
@@ -536,7 +537,7 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
             wishlist_cell.handling_time = self.handling_time
             wishlist_cell.global_shipping = self.global_shipping
             
-            var wishlist = [String: wishlist_table_cell_contents]()
+            var wishlist = [String: wishlist_table_contents]()
             wishlist[self.selected_product_id] = wishlist_cell
             
             message += self.selected_product_name

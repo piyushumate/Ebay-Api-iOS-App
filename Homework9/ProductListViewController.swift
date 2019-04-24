@@ -11,18 +11,18 @@ import SwiftSpinner
 import Alamofire
 import SwiftyJSON
 
-struct products_list_table_cell_contents {
+struct products_list_contents {
     var item_id : String?
     var name : String?
-    var image : String?
-    var price : String?
-    var currency_symbol : String?
+    var currency : String?
     var shipping : String?
     var shipping_symbol : String?
     var zip : String?
     var condition : String?
     var global_shipping : String?
     var handling_time : String?
+    var image : String?
+    var price : String?
 }
 
 
@@ -52,169 +52,167 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
     var input_query_parameters = [String: Any] ()
     
     var product_list_dictionary = Dictionary<String,Any> ()
-    var products = [products_list_table_cell_contents]()
+    var products = [products_list_contents]()
     var product_list = [Any]()
     
     var selected_index = Int()
-    
-    var product_keyword = ""
-    var product_category = ""
-    var new_condition = ""
-    var used_condition = ""
+
     var unspecified_condition = ""
     var local_pickup = ""
     var free_shipping = ""
     var distance = ""
     var zip_code = ""
-    var url = "http://assignment9-env.jmt4k6j8tq.us-east-2.elasticbeanstalk.com/search_multiple_products/"
+
+    var product_keyword = ""
+    var product_category = ""
+    var new_condition = ""
+    var used_condition = ""
     
-    let http_headers: HTTPHeaders = [
-        "Accept": "application/json"
-    ]
+    var request_url = "http://csci571homework8-env.crc386dumd.us-east-2.elasticbeanstalk.com/products"
+
+    let http_headers: HTTPHeaders = ["Accept": "application/json"]
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    
+//    override func viewDidLoad() {
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         // Do any additional setup after loading the view.
         tableView.dataSource = self
         tableView.delegate = self
         self.view.addSubview(tableView)
         
-//        print("IN PRODUCT DETAILS")
-//        print("KEYWORD " + self.product_keyword)
-//        print("CATEGORY" + self.product_category)
-//        print("NEW" + self.new_condition)
-//        print("USED" + self.used_condition)
-//        print("UNSPECIFIED" + self.unspecified_condition)
-//        print("FREE SHIPPING " + self.free_shipping)
-//        print("PICKUP " + self.local_pickup)
-//        print("DISTANCE " + self.distance)
-        
-        var product_condition = [String] ()
-        if new_condition == "true" {
-            product_condition.append("New")
-        }
-        
-        if used_condition == "true" {
-            product_condition.append("Used")
-        }
-        
-        if unspecified_condition == "true" {
-            product_condition.append("Unspecified")
-        }
-        
-        var shipping_options = [String: Any]  ()
-        if free_shipping == "true" {
-            shipping_options["free_shipping"] = "true"
+        if products.count != 0 {
+            tableView.reloadData()
         } else {
-            shipping_options["free_shipping"] = "false"
-        }
+            var product_condition = [String] ()
+            
+            update_product_condition(product_condition: &product_condition,
+                                     flag: new_condition,
+                                     condition: "New")
+            update_product_condition(product_condition: &product_condition,
+                                     flag: used_condition,
+                                     condition: "Used")
+            update_product_condition(product_condition: &product_condition,
+                                     flag: unspecified_condition,
+                                     condition: "Unspecified")
+     
+            
+            var shipping_options = [String: Any]  ()
+            shipping_options["FreeShippingOnly"] = free_shipping == "true" ? "true" : "false"
+            shipping_options["LocalPickupOnly"]  = local_pickup == "true" ? "true": "false"
+            
+            input_query_parameters = [
+                "keyword" : product_keyword,
+                "category" : product_category,
+                "condition" : product_condition,
+                "shipping_options" : shipping_options,
+                "zip_code" : zip_code,
+                "distance": distance
+            ]
         
-        if local_pickup == "true" {
-            shipping_options["local_pickup"] = "true"
-        } else {
-            shipping_options["local_pickup"] = "false"
-        }
-
-        input_query_parameters = [
-            "product_keyword" : product_keyword,
-            "product_category" : "all_categories",
-            "product_condition" : product_condition,
-            "shipping_options" : shipping_options,
-            "search_location" : "current_location",
-            "zip_code" : zip_code
-        ]
-    
-        ebay_request{input_list in
-            self.product_list_dictionary = input_list}
+            ebay_request{input_list in self.product_list_dictionary = input_list}
+            
+            SwiftSpinner.show(delay: 0.0, title: "Searching...", animated: true)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+                if self.product_list_dictionary["data"] != nil {
+                    self.product_list = self.product_list_dictionary["data"] as! [Any]
+    //                print(self.product_list)
+    //               print(self.product_list.count)
+                    for item in self.product_list {
+                            let product = item as! [String: Any]
+                        
+                            var temp = products_list_contents()
+                        
+                            temp.item_id = product["Item ID"] as! String
+                        
+    //                        print(temp.item_id)
+                        
+                            temp.name = product["Name"] as! String
+                        
+                            let photo = product["Photo"]  as! String
         
-        SwiftSpinner.show(delay: 1.0, title: "Searching...", animated: true)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) { // Change `4.0` to the desired number of seconds.
-//              print(self.product_list_dictionary)
-            if self.product_list_dictionary["data"] != nil {
-                self.product_list = self.product_list_dictionary["data"] as! [Any]
-//                print(self.product_list)
-//               print(self.product_list.count)
-                for item in self.product_list {
-                        let product = item as! [String: Any]
-                        var temp = products_list_table_cell_contents()
-                        temp.item_id = product["Item ID"] as! String
-//                        print(temp.item_id)
-                    
-                        temp.name = product["Name"] as! String
-                    
-                        let photo = product["Photo"]  as! [String]
-                        temp.image = photo[0] as! String
-                    
-                        let price = product["Price"] as! [String: String]
-                        temp.price = price["__value__"]
-                        temp.currency_symbol = price["@currencyId"]
-                    
-                        let shipping_option = product["Shipping Option"] as! [String: Any]
-                        if shipping_option["shippingServiceCost"] != nil {
-                            let shipping_cost = shipping_option["shippingServiceCost"] as! [[String: String]]
-                            temp.shipping = shipping_cost[0]["__value__"]
-                            temp.shipping_symbol = shipping_cost[0]["@currencyId"]
-                        } else {
-                            temp.shipping = "0.0"
-                        }
-                    
-//                        print(shipping_option["handlingTime"])
-                        if shipping_option["handlingTime"] != nil {
-                            let shipping_handling_time = shipping_option["handlingTime"] as! [String]
-                            temp.handling_time = shipping_handling_time[0] as! String
-                        } else {
-                            temp.handling_time = "1"
-                        }
+                            temp.image = photo as! String
+                        
+                            let price = product["Price"] as! [String: String]
+                        
+                            temp.price = price["__value__"]
+                            temp.currency = price["@currencyId"]
+                        
+                            let shipping_option = product["Shipping"] as! [String: Any]
+                            if shipping_option["shippingServiceCost"] != nil {
+                                let shipping_cost = shipping_option["shippingServiceCost"] as! [[String: String]]
+                                temp.shipping = shipping_cost[0]["__value__"]
+                                temp.shipping_symbol = shipping_cost[0]["@currencyId"]
+                            } else {
+                                temp.shipping = "0.0"
+                            }
+                        
+    //                        print(shipping_option["handlingTime"])
+                            if shipping_option["handlingTime"] != nil {
+                                let shipping_handling_time = shipping_option["handlingTime"] as! [String]
+                                temp.handling_time = shipping_handling_time[0] as! String
+                            } else {
+                                temp.handling_time = "1"
+                            }
 
-                        if shipping_option["shipToLocations"] != nil {
-                            let shipping_global = shipping_option["shipToLocations"] as! [String]
-                            if shipping_global[0] as! String == "Worldwide" {
-                                temp.global_shipping = "Yes"
+                            if shipping_option["shipToLocations"] != nil {
+                                let shipping_global = shipping_option["shipToLocations"] as! [String]
+                                if shipping_global[0] as! String == "Worldwide" {
+                                    temp.global_shipping = "Yes"
+                                } else {
+                                    temp.global_shipping = "No"
+                                }
                             } else {
                                 temp.global_shipping = "No"
                             }
-                        } else {
-                            temp.global_shipping = "No"
+                        
+                            temp.zip = product["zip_code"] as! String
+                        
+                            let condition = product["Condition"] as! [String: Any]
+                            let condition_option = condition["conditionId"] as! [String]
+                            let condition_id = condition_option[0] as! String
+                            if condition_id == "1000" {
+                                temp.condition = "NEW"
+                            } else if condition_id == "2000" || condition_id == "2500" {
+                                temp.condition = "REFURBISHED"
+                            } else if condition_id == "3000" || condition_id == "4000" || condition_id == "5000" || condition_id == "6000" {
+                                temp.condition = "USED"
+                            } else {
+                                temp.condition = "NA"
+                            }
+                        
+                            self.products.append(temp)
                         }
-                    
-                        temp.zip = product["Zip code"] as! String
-                    
-                        let condition = product["Condition"] as! [String: Any]
-                        let condition_option = condition["conditionId"] as! [String]
-                        let condition_id = condition_option[0] as! String
-                        if condition_id == "1000" {
-                            temp.condition = "NEW"
-                        } else if condition_id == "2000" || condition_id == "2500" {
-                            temp.condition = "REFURBISHED"
-                        } else if condition_id == "3000" || condition_id == "4000" || condition_id == "5000" || condition_id == "6000" {
-                            temp.condition = "USED"
-                        } else {
-                            temp.condition = "NA"
-                        }
-                    
-                        self.products.append(temp)
+    //                    print(self.products)
+                        self.tableView.reloadData()
+                    } else {
+                        var alert : UIAlertView = UIAlertView(title: "No Results!", message: "Failed to fetch search results", delegate: nil, cancelButtonTitle: "Ok")
+                        alert.show()
                     }
-//                    print(self.products)
-                    self.tableView.reloadData()
-                } else {
-                    var alert : UIAlertView = UIAlertView(title: "No Results!", message: "Failed to fetch search results", delegate: nil, cancelButtonTitle: "Ok")
-                    alert.show()
+    //                print(self.products)
+                    SwiftSpinner.hide()
                 }
-//                print(self.products)
-                SwiftSpinner.hide()
-            }
+        }
+    }
+    
+    func update_product_condition(product_condition: inout [String], flag: String, condition: String) {
+        if (flag == "true") {
+            product_condition.append(condition)
+        }
     }
     
     func ebay_request(completion: @escaping(_ : Dictionary<String,Any>) -> ())
     {
-        Alamofire.request(url, method: .post, parameters: input_query_parameters, encoding:JSONEncoding.default, headers: http_headers).responseJSON { (response:DataResponse<Any>) in
-            var result_dictionary = Dictionary<String,Any>()
+        //print(input_query_parameters)
+        Alamofire.request(request_url, method: .post, parameters: input_query_parameters, encoding:JSONEncoding.default, headers: http_headers).responseJSON { (response:DataResponse<Any>) in
+            var result = Dictionary<String,Any>()
+            
             switch(response.result) {
                 case .success(_):
                     
                     if response.result.value != nil {
-                        result_dictionary = response.result.value! as! Dictionary<String,Any>
-    //                    print(result_dictionary)
+                        result = response.result.value! as! Dictionary<String,Any>
+                        //print(result)
                     }
                     break
                 
@@ -224,7 +222,7 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
                     }
                     break
             }
-            completion(result_dictionary)
+            completion(result)
         }
     }
     
@@ -239,20 +237,20 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 //        print("IN TABLE VIEW")
 //        print(products)
-        var currency_symbol = ""
+        var currency = ""
         let cell = tableView.dequeueReusableCell(withIdentifier: "Productlist_Cell", for: indexPath) as! products_list_table_cell
         let product = products[indexPath.row]
         
         cell.table_cell_product_name?.text = product.name
         
-        var locale = NSLocale(localeIdentifier: product.currency_symbol!)
-        if locale.displayName(forKey: .currencySymbol, value: product.currency_symbol!) == product.currency_symbol! {
-            let newlocale = NSLocale(localeIdentifier: product.currency_symbol!.dropLast() + "_en")
-            currency_symbol = newlocale.displayName(forKey: .currencySymbol, value: product.currency_symbol!)!
+        var locale = NSLocale(localeIdentifier: product.currency!)
+        if locale.displayName(forKey: .currencySymbol, value: product.currency!) == product.currency! {
+            let newlocale = NSLocale(localeIdentifier: product.currency!.dropLast() + "_en")
+            currency = newlocale.displayName(forKey: .currencySymbol, value: product.currency!)!
         } else {
-            currency_symbol = locale.displayName(forKey: .currencySymbol, value: product.currency_symbol!)!
+            currency = locale.displayName(forKey: .currencySymbol, value: product.currency!)!
         }
-        cell.table_cell_product_price?.text = (currency_symbol + product.price!)
+        cell.table_cell_product_price?.text = (currency + product.price!)
         
         cell.table_cell_condition?.text = product.condition
         
@@ -260,11 +258,11 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
             locale = NSLocale(localeIdentifier: product.shipping_symbol!)
             if locale.displayName(forKey: .currencySymbol, value: product.shipping_symbol!) == product.shipping_symbol! {
                 let newlocale = NSLocale(localeIdentifier: product.shipping_symbol!.dropLast() + "_en")
-                currency_symbol = newlocale.displayName(forKey: .currencySymbol, value: product.shipping_symbol!)!
+                currency = newlocale.displayName(forKey: .currencySymbol, value: product.shipping_symbol!)!
             } else {
-                currency_symbol = locale.displayName(forKey: .currencySymbol, value: product.shipping_symbol!)!
+                currency = locale.displayName(forKey: .currencySymbol, value: product.shipping_symbol!)!
             }
-            cell.table_cell_shipping_price?.text = (currency_symbol + product.shipping!)
+            cell.table_cell_shipping_price?.text = (currency + product.shipping!)
         } else {
             cell.table_cell_shipping_price?.text = "FREE SHIPPING"
         }
@@ -276,8 +274,8 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
             cell.table_cell_product_image?.image = UIImage(data: imageData)
         }
         
-        if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
-            let wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
+        if UserDefaults.standard.object([String: wishlist_table_contents].self, with: "wishlist") != nil {
+            let wishlist = UserDefaults.standard.object([String: wishlist_table_contents].self, with: "wishlist") as! [String: wishlist_table_contents]
             if wishlist[product.item_id!] != nil {
                 cell.table_cell_wishlist_button?.setImage(UIImage(named: "wishListFilled"), for: .normal)
             } else {
@@ -305,7 +303,7 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
             product_details.selected_product_name = String(product.name!)
             product_details.selected_product_image = String(product.image!)
             product_details.price = String(product.price!)
-            product_details.currency_symbol = String(product.currency_symbol!)
+            product_details.currency_symbol = String(product.currency!)
             product_details.shipping = String(product.shipping!)
             product_details.shipping_symbol = String(product.shipping_symbol!)
             product_details.zip = String(product.zip!)
@@ -316,18 +314,23 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
     }
     
     func show_toast_message(message : String) {
-        let toastLabel = UILabel(frame: CGRect(x: self.view.frame.size.width/11, y: self.view.frame.size.height - self.view.frame.size.height/8, width: self.view.frame.size.width/1.2, height: 300))
+        let toastLabel = UILabel()
         toastLabel.backgroundColor = UIColor.black.withAlphaComponent(1)
         toastLabel.textColor = UIColor.white
         toastLabel.textAlignment = .center
-        toastLabel.font = UIFont(name: "Montserrat-Light", size: 1.0)
-        toastLabel.text = message
-        toastLabel.adjustsFontSizeToFitWidth = true
-        toastLabel.alpha = 1.0
         toastLabel.layer.cornerRadius = 7
         toastLabel.clipsToBounds  =  true
         toastLabel.lineBreakMode = .byWordWrapping
         toastLabel.numberOfLines = 4
+        toastLabel.frame = CGRect(
+            x: self.view.frame.size.width/11,
+            y: self.view.frame.size.height - self.view.frame.size.height/8,
+            width: self.view.frame.size.width/1.2,
+            height: 300)
+        toastLabel.font = UIFont(name: "Montserrat-Light", size: 1.0)
+        toastLabel.text = message
+        toastLabel.adjustsFontSizeToFitWidth = true
+        toastLabel.alpha = 1.0
         toastLabel.sizeToFit()
         self.view.addSubview(toastLabel)
         UIView.animate(withDuration: 5.0, delay: 0.1, options: .curveEaseOut, animations: {
@@ -339,8 +342,8 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
     
     @objc func wish_list_pressed(_ sender: UIButton!) {
         print("IN WISHLIST PRESSED")
-        if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
-            var wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
+        if UserDefaults.standard.object([String: wishlist_table_contents].self, with: "wishlist") != nil {
+            var wishlist = UserDefaults.standard.object([String: wishlist_table_contents].self, with: "wishlist") as! [String: wishlist_table_contents]
             if wishlist.count != 0 {
                 print(wishlist[String(sender.tag)])
                 if wishlist[String(sender.tag)] != nil {
@@ -362,14 +365,14 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
                     // Add item to wishlist
                     print("IN ADD")
                     var message = ""
-                    var wishlist_cell = wishlist_table_cell_contents()
+                    var wishlist_cell = wishlist_table_contents()
                     for product in products {
                         if String(sender.tag) == product.item_id {
                             wishlist_cell.item_id = product.item_id
                             wishlist_cell.name = product.name
                             wishlist_cell.image = product.image
                             wishlist_cell.price = product.price
-                            wishlist_cell.currency_symbol = product.currency_symbol
+                            wishlist_cell.currency_symbol = product.currency
                             wishlist_cell.shipping = product.shipping
                             wishlist_cell.shipping_symbol = product.shipping_symbol
                             wishlist_cell.zip = product.zip
@@ -392,14 +395,14 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
                 print("IN ELSE CONDITION")
                 //Create wishlist and add in wishlist
                 var message = ""
-                var wishlist_cell = wishlist_table_cell_contents()
+                var wishlist_cell = wishlist_table_contents()
                 for product in products {
                     if String(sender.tag) == product.item_id {
                         wishlist_cell.item_id = product.item_id
                         wishlist_cell.name = product.name
                         wishlist_cell.image = product.image
                         wishlist_cell.price = product.price
-                        wishlist_cell.currency_symbol = product.currency_symbol
+                        wishlist_cell.currency_symbol = product.currency
                         wishlist_cell.shipping = product.shipping
                         wishlist_cell.shipping_symbol = product.shipping_symbol
                         wishlist_cell.zip = product.zip
@@ -418,14 +421,14 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
             }
         } else {
             var message = ""
-            var wishlist_cell = wishlist_table_cell_contents()
+            var wishlist_cell = wishlist_table_contents()
             for product in products {
                 if String(sender.tag) == product.item_id {
                     wishlist_cell.item_id = product.item_id
                     wishlist_cell.name = product.name
                     wishlist_cell.image = product.image
                     wishlist_cell.price = product.price
-                    wishlist_cell.currency_symbol = product.currency_symbol
+                    wishlist_cell.currency_symbol = product.currency
                     wishlist_cell.shipping = product.shipping
                     wishlist_cell.shipping_symbol = product.shipping_symbol
                     wishlist_cell.zip = product.zip
@@ -436,7 +439,7 @@ class ProductListViewController: UIViewController, UITableViewDelegate, UITableV
                     message += product.name!
                 }
             }
-            var wishlist = [String: wishlist_table_cell_contents]()
+            var wishlist = [String: wishlist_table_contents]()
             wishlist[String(sender.tag)] = wishlist_cell
             message += " was added to the Wish List"
             show_toast_message(message: message)

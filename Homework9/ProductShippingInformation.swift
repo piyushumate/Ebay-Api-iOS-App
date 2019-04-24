@@ -60,8 +60,8 @@ class ProductShippingInformation: UIViewController, UITableViewDelegate, UITable
         facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
         let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
         
-        if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
-            var wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
+        if UserDefaults.standard.object([String: wishlist_table_contents].self, with: "wishlist") != nil {
+            var wishlist = UserDefaults.standard.object([String: wishlist_table_contents].self, with: "wishlist") as! [String: wishlist_table_contents]
             if wishlist.count != 0 {
                 //                print(wishlist[String(sender.tag)])
                 if wishlist[self.selected_product_id] != nil {
@@ -178,7 +178,7 @@ class ProductShippingInformation: UIViewController, UITableViewDelegate, UITable
             self.tableData.append(returns_dictionary)
         }
         
-        SwiftSpinner.show(delay: 1.0, title: "Fetching Shipping Data...", animated: true)
+        SwiftSpinner.show(delay: 0.0, title: "Fetching Shipping Data...", animated: true)
         DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
             if self.tableData != nil {
                 self.tableView.reloadData()
@@ -375,8 +375,8 @@ class ProductShippingInformation: UIViewController, UITableViewDelegate, UITable
     
     @objc func wish_list(sender: UIBarButtonItem!) {
         print("IN WISHLIST PRESSED")
-        if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
-            var wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
+        if UserDefaults.standard.object([String: wishlist_table_contents].self, with: "wishlist") != nil {
+            var wishlist = UserDefaults.standard.object([String: wishlist_table_contents].self, with: "wishlist") as! [String: wishlist_table_contents]
             if wishlist.count != 0 {
                 //                print(wishlist[String(sender.tag)])
                 if wishlist[self.selected_product_id] != nil {
@@ -410,7 +410,7 @@ class ProductShippingInformation: UIViewController, UITableViewDelegate, UITable
                     // Add item to wishlist
                     print("IN ADD")
                     var message = ""
-                    var wishlist_cell = wishlist_table_cell_contents()
+                    var wishlist_cell = wishlist_table_contents()
                     wishlist_cell.item_id = self.selected_product_id
                     wishlist_cell.name = self.selected_product_name
                     wishlist_cell.image = self.selected_product_image
@@ -448,7 +448,7 @@ class ProductShippingInformation: UIViewController, UITableViewDelegate, UITable
                 print("IN ELSE CONDITION")
                 //Create wishlist and add in wishlist
                 var message = ""
-                var wishlist_cell = wishlist_table_cell_contents()
+                var wishlist_cell = wishlist_table_contents()
                 wishlist_cell.item_id = self.selected_product_id
                 wishlist_cell.name = self.selected_product_name
                 wishlist_cell.image = self.selected_product_image
@@ -483,7 +483,7 @@ class ProductShippingInformation: UIViewController, UITableViewDelegate, UITable
             }
         } else {
             var message = ""
-            var wishlist_cell = wishlist_table_cell_contents()
+            var wishlist_cell = wishlist_table_contents()
             wishlist_cell.item_id = self.selected_product_id
             wishlist_cell.name = self.selected_product_name
             wishlist_cell.image = self.selected_product_image
@@ -496,7 +496,7 @@ class ProductShippingInformation: UIViewController, UITableViewDelegate, UITable
             wishlist_cell.handling_time = self.handling_time
             wishlist_cell.global_shipping = self.global_shipping
             
-            var wishlist = [String: wishlist_table_cell_contents]()
+            var wishlist = [String: wishlist_table_contents]()
             wishlist[self.selected_product_id] = wishlist_cell
             
             message += self.selected_product_name

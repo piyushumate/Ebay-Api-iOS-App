@@ -34,9 +34,7 @@ class ProductPhotos: UIViewController {
     
     var url = "http://assignment9-env.jmt4k6j8tq.us-east-2.elasticbeanstalk.com/search_product_images/"
     
-    let http_headers: HTTPHeaders = [
-        "Accept": "application/json"
-    ]
+    let http_headers: HTTPHeaders = ["Accept": "application/json"]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -47,8 +45,8 @@ class ProductPhotos: UIViewController {
         facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
         let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
         
-        if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
-            var wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
+        if UserDefaults.standard.object([String: wishlist_table_contents].self, with: "wishlist") != nil {
+            var wishlist = UserDefaults.standard.object([String: wishlist_table_contents].self, with: "wishlist") as! [String: wishlist_table_contents]
             if wishlist.count != 0 {
                 //                print(wishlist[String(sender.tag)])
                 if wishlist[self.selected_product_id] != nil {
@@ -91,7 +89,7 @@ class ProductPhotos: UIViewController {
         ebay_request{input_list in
             self.product_photos = input_list}
         
-        SwiftSpinner.show(delay: 1.0, title: "Fetching Google Images...", animated: true)
+        SwiftSpinner.show(delay: 0.0, title: "Fetching Google Images...", animated: true)
         
         DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + 4.0) {
             // Start background thread so that image loading does not make app unresponsive
@@ -193,8 +191,8 @@ class ProductPhotos: UIViewController {
     
     @objc func wish_list(sender: UIBarButtonItem!) {
         print("IN WISHLIST PRESSED")
-        if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
-            var wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
+        if UserDefaults.standard.object([String: wishlist_table_contents].self, with: "wishlist") != nil {
+            var wishlist = UserDefaults.standard.object([String: wishlist_table_contents].self, with: "wishlist") as! [String: wishlist_table_contents]
             if wishlist.count != 0 {
                 //                print(wishlist[String(sender.tag)])
                 if wishlist[self.selected_product_id] != nil {
@@ -228,7 +226,7 @@ class ProductPhotos: UIViewController {
                     // Add item to wishlist
                     print("IN ADD")
                     var message = ""
-                    var wishlist_cell = wishlist_table_cell_contents()
+                    var wishlist_cell = wishlist_table_contents()
                     wishlist_cell.item_id = self.selected_product_id
                     wishlist_cell.name = self.selected_product_name
                     wishlist_cell.image = self.selected_product_image
@@ -266,7 +264,7 @@ class ProductPhotos: UIViewController {
                 print("IN ELSE CONDITION")
                 //Create wishlist and add in wishlist
                 var message = ""
-                var wishlist_cell = wishlist_table_cell_contents()
+                var wishlist_cell = wishlist_table_contents()
                 wishlist_cell.item_id = self.selected_product_id
                 wishlist_cell.name = self.selected_product_name
                 wishlist_cell.image = self.selected_product_image
@@ -300,7 +298,7 @@ class ProductPhotos: UIViewController {
             }
         } else {
             var message = ""
-            var wishlist_cell = wishlist_table_cell_contents()
+            var wishlist_cell = wishlist_table_contents()
             wishlist_cell.item_id = self.selected_product_id
             wishlist_cell.name = self.selected_product_name
             wishlist_cell.image = self.selected_product_image
@@ -313,7 +311,7 @@ class ProductPhotos: UIViewController {
             wishlist_cell.handling_time = self.handling_time
             wishlist_cell.global_shipping = self.global_shipping
             
-            var wishlist = [String: wishlist_table_cell_contents]()
+            var wishlist = [String: wishlist_table_contents]()
             wishlist[self.selected_product_id] = wishlist_cell
             
             message += self.selected_product_name
