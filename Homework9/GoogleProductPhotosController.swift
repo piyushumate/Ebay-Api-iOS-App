@@ -3,7 +3,7 @@ import SwiftSpinner
 import Alamofire
 import SwiftyJSON
 
-class ProductPhotos: UIViewController {
+class GoogleProductPhotosController: UIViewController {
     
     var input_query_parameters = [String: Any] ()
     var selected_product_id = ""

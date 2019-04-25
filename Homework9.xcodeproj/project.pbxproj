@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5EDFB9652263E824004EBD7A /* ProductPhotos.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EDFB9642263E824004EBD7A /* ProductPhotos.swift */; };
+		5EDFB9652263E824004EBD7A /* GoogleProductPhotosController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EDFB9642263E824004EBD7A /* GoogleProductPhotosController.swift */; };
 		5EDFB9672263E85A004EBD7A /* ProductInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EDFB9662263E85A004EBD7A /* ProductInformation.swift */; };
 		5EDFB9692263E876004EBD7A /* SimilarItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EDFB9682263E876004EBD7A /* SimilarItems.swift */; };
 		5EDFB96B2263E891004EBD7A /* ProductShippingInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EDFB96A2263E891004EBD7A /* ProductShippingInformation.swift */; };
@@ -22,7 +22,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		5EDFB9642263E824004EBD7A /* ProductPhotos.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductPhotos.swift; sourceTree = "<group>"; };
+		5EDFB9642263E824004EBD7A /* GoogleProductPhotosController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleProductPhotosController.swift; sourceTree = "<group>"; };
 		5EDFB9662263E85A004EBD7A /* ProductInformation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductInformation.swift; sourceTree = "<group>"; };
 		5EDFB9682263E876004EBD7A /* SimilarItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimilarItems.swift; sourceTree = "<group>"; };
 		5EDFB96A2263E891004EBD7A /* ProductShippingInformation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductShippingInformation.swift; sourceTree = "<group>"; };
@@ -69,7 +69,7 @@
 				5EDFB9662263E85A004EBD7A /* ProductInformation.swift */,
 				5EDFB9682263E876004EBD7A /* SimilarItems.swift */,
 				5EDFB96A2263E891004EBD7A /* ProductShippingInformation.swift */,
-				5EDFB9642263E824004EBD7A /* ProductPhotos.swift */,
+				5EDFB9642263E824004EBD7A /* GoogleProductPhotosController.swift */,
 				5EE5688B2257C438005A1DFA /* AppDelegate.swift */,
 				5EE5688D2257C438005A1DFA /* SearchController.swift */,
 				5EE31412225D83A800BC3ECD /* ProductListController.swift */,
@@ -233,7 +233,7 @@
 				5EDFB96B2263E891004EBD7A /* ProductShippingInformation.swift in Sources */,
 				5EE31413225D83A800BC3ECD /* ProductListController.swift in Sources */,
 				5EE5688E2257C438005A1DFA /* SearchController.swift in Sources */,
-				5EDFB9652263E824004EBD7A /* ProductPhotos.swift in Sources */,
+				5EDFB9652263E824004EBD7A /* GoogleProductPhotosController.swift in Sources */,
 				5EE5688C2257C438005A1DFA /* AppDelegate.swift in Sources */,
 				5EDFB9672263E85A004EBD7A /* ProductInformation.swift in Sources */,
 				5EDFB9692263E876004EBD7A /* SimilarItems.swift in Sources */,

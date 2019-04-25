@@ -280,7 +280,7 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
                 product_shipping_tab.item_url = self.item_url
                 product_shipping_tab.selected_product_price = self.selected_product_price
                 
-                let product_photos_tab = self.tabBarController?.viewControllers![2] as! ProductPhotos
+                let product_photos_tab = self.tabBarController?.viewControllers![2] as! GoogleProductPhotosController
                 product_photos_tab.selected_product_id = self.selected_product_id
                 product_photos_tab.selected_product_name = self.selected_product_name
                 product_photos_tab.selected_product_image = self.selected_product_image

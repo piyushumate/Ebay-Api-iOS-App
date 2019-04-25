@@ -563,7 +563,7 @@
         <!--Photos-->
         <scene sceneID="tMJ-IX-AJ3">
             <objects>
-                <viewController id="lvm-Td-FXS" customClass="ProductPhotos" customModule="Homework9" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="lvm-Td-FXS" customClass="GoogleProductPhotosController" customModule="Homework9" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="l18-bq-OnJ">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
