@@ -1,18 +1,10 @@
-//
-//  ProductPhotos.swift
-//  Homework9
-//
-//  Created by usc on 4/14/19.
-//  Copyright © 2019 usc. All rights reserved.
-//
-
 import UIKit
 import SwiftSpinner
 import Alamofire
 import SwiftyJSON
 
 class ProductPhotos: UIViewController {
-
+    
     var input_query_parameters = [String: Any] ()
     var selected_product_id = ""
     var selected_product_name = ""
@@ -32,18 +24,16 @@ class ProductPhotos: UIViewController {
     
     @IBOutlet weak var scroll_view: UIScrollView!
     
-    var url = "http://assignment9-env.jmt4k6j8tq.us-east-2.elasticbeanstalk.com/search_product_images/"
+    var request_url = "http://csci571homework8-env.crc386dumd.us-east-2.elasticbeanstalk.com/product_images/"
     
-    let http_headers: HTTPHeaders = [
-        "Accept": "application/json"
-    ]
+    let http_headers: HTTPHeaders = ["Accept": "application/json"]
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         let facebook_button = UIButton.init(type: .custom)
         facebook_button.setImage(UIImage.init(named: "facebook")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
-        facebook_button.addTarget(self, action:#selector(facebook_share), for:.touchUpInside)
+        facebook_button.addTarget(self, action:#selector(share_facebook), for:.touchUpInside)
         facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
         let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
         
@@ -88,14 +78,11 @@ class ProductPhotos: UIViewController {
             "search_query" : selected_product_name,
         ]
         
-        ebay_request{input_list in
-            self.product_photos = input_list}
+        google_photos{input_list in self.product_photos = input_list}
         
         SwiftSpinner.show(delay: 0.0, title: "Fetching Google Images...", animated: true)
         
         DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + 4.0) {
-            // Start background thread so that image loading does not make app unresponsive
-//            print(self.product_photos)
             
             if self.product_photos.count != 0 {
                 for index in 0 ..< self.product_photos.count {
@@ -150,25 +137,22 @@ class ProductPhotos: UIViewController {
         })
     }
     
-    func ebay_request(completion: @escaping(_ : [String]) -> ())
+    func google_photos(completion: @escaping(_ : [String]) -> ())
     {
-        Alamofire.request(url, method: .post, parameters: input_query_parameters, encoding:JSONEncoding.default, headers: http_headers).responseJSON { (response:DataResponse<Any>) in
+        Alamofire.request(request_url, method: .post, parameters: input_query_parameters, encoding:JSONEncoding.default, headers: http_headers).responseJSON { (response:DataResponse<Any>) in
             var result_array = [String]()
             switch(response.result)
             {
-                case .success(_):
-                    
-                    if response.result.value != nil
-                    {
-                        result_array = response.result.value! as! [String]
-    //                    print(result_array)
+                case .failure(_):
+                    if response.result.error != nil {
+                        print(response.result.error!)
                     }
                     break
+
+                case .success(_):
                 
-                case .failure(_):
-                    if response.result.error != nil
-                    {
-                        print(response.result.error!)
+                    if response.result.value != nil {
+                        result_array = response.result.value! as! [String]
                     }
                     break
             }
@@ -176,17 +160,25 @@ class ProductPhotos: UIViewController {
         }
     }
     
-    @objc func facebook_share(sender: UIBarButtonItem!) {
-        var search_url = "https://www.facebook.com/dialog/share?app_id=2161096860867733&display=popup&href="
-        search_url.append(self.item_url)
-        search_url.append("&quote=")
-        var message = "Buy "
-        message.append(self.selected_product_name)
-        message.append(" at ")
-        message.append(self.selected_product_price)
-        message.append(" from link below")
-        message = String(message).addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!
+    @objc func share_facebook(sender: UIBarButtonItem!) {
+        var search_url = "https://www.facebook.com/dialog/share?app_id=867509633598269&display=popup&href="
+        
+        search_url = [search_url, self.item_url, "&quote="].joined(separator: "")
+        
+        var message = [
+            "Buy",
+            self.selected_product_name,
+            "at",
+            self.selected_product_price,
+            "from link below"].joined(separator: " ")
+        
+        var characterSet = CharacterSet.urlQueryAllowed
+        characterSet.remove(charactersIn: "?&=")
+        message = String(message).addingPercentEncoding(withAllowedCharacters: characterSet)!
+        
         search_url.append(String(message))
+        
+        
         guard let url = URL(string: String(search_url)) else { return }
         UIApplication.shared.open(url)
     }
@@ -214,7 +206,7 @@ class ProductPhotos: UIViewController {
                     }
                     let facebook_button = UIButton.init(type: .custom)
                     facebook_button.setImage(UIImage.init(named: "facebook")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
-                    facebook_button.addTarget(self, action:#selector(facebook_share), for:.touchUpInside)
+                    facebook_button.addTarget(self, action:#selector(share_facebook), for:.touchUpInside)
                     facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
                     let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
                     
@@ -251,7 +243,7 @@ class ProductPhotos: UIViewController {
                     UserDefaults.standard.set(object: wishlist, forKey: "wishlist")
                     let facebook_button = UIButton.init(type: .custom)
                     facebook_button.setImage(UIImage.init(named: "facebook")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
-                    facebook_button.addTarget(self, action:#selector(facebook_share), for:.touchUpInside)
+                    facebook_button.addTarget(self, action:#selector(share_facebook), for:.touchUpInside)
                     facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
                     let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
                     
@@ -287,7 +279,7 @@ class ProductPhotos: UIViewController {
                 UserDefaults.standard.set(object: wishlist, forKey: "wishlist")
                 let facebook_button = UIButton.init(type: .custom)
                 facebook_button.setImage(UIImage.init(named: "facebook")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
-                facebook_button.addTarget(self, action:#selector(facebook_share), for:.touchUpInside)
+                facebook_button.addTarget(self, action:#selector(share_facebook), for:.touchUpInside)
                 facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
                 let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
                 
@@ -323,7 +315,7 @@ class ProductPhotos: UIViewController {
             UserDefaults.standard.set(object: wishlist, forKey: "wishlist")
             let facebook_button = UIButton.init(type: .custom)
             facebook_button.setImage(UIImage.init(named: "facebook")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
-            facebook_button.addTarget(self, action:#selector(facebook_share), for:.touchUpInside)
+            facebook_button.addTarget(self, action:#selector(share_facebook), for:.touchUpInside)
             facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
             let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
             
@@ -336,16 +328,5 @@ class ProductPhotos: UIViewController {
         }
     }
     
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }
 
