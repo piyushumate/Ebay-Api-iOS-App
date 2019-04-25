@@ -6,9 +6,11 @@ import SwiftyJSON
 class GoogleProductPhotosController: UIViewController {
     
     var input_query_parameters = [String: Any] ()
-    var selected_product_id = ""
-    var selected_product_name = ""
-    var selected_product_image = ""
+    
+    var item_url = ""
+    var selected_product_price = ""
+    var product_photos = [String]()
+
     var price = ""
     var currency_symbol = ""
     var shipping = ""
@@ -17,11 +19,11 @@ class GoogleProductPhotosController: UIViewController {
     var condition = ""
     var global_shipping = ""
     var handling_time = "1"
-    
-    var item_url = ""
-    var selected_product_price = ""
-    var product_photos = [String]()
-    
+
+    var selected_product_id = ""
+    var selected_product_name = ""
+    var selected_product_image = ""
+
     @IBOutlet weak var scroll_view: UIScrollView!
     
     var request_url = "http://csci571homework8-env.crc386dumd.us-east-2.elasticbeanstalk.com/product_images/"
@@ -33,7 +35,10 @@ class GoogleProductPhotosController: UIViewController {
         
         let facebook_button = UIButton.init(type: .custom)
         facebook_button.setImage(UIImage.init(named: "facebook")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
-        facebook_button.addTarget(self, action:#selector(share_facebook), for:.touchUpInside)
+        
+        facebook_button.addTarget(self,
+                                  action:#selector(facebook_share),
+                                  for:.touchUpInside)
         facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
         let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
         
@@ -73,7 +78,7 @@ class GoogleProductPhotosController: UIViewController {
             self.tabBarController?.navigationItem.rightBarButtonItems = [wish_list_bar_button, facebook_bar_button]
         }
         
-        // Do any additional setup after loading the view.
+        
         input_query_parameters = [
             "search_query" : selected_product_name,
         ]
@@ -109,14 +114,21 @@ class GoogleProductPhotosController: UIViewController {
                 }
             } else {
                 SwiftSpinner.hide()
-                var alert : UIAlertView = UIAlertView(title: "No Google Photos Found!", message: "Failed to fetch search results", delegate: nil, cancelButtonTitle: "Ok")
+                var alert : UIAlertView = UIAlertView(title: "No Google Photos Found!",
+                                                      message: "Failed to fetch search results",
+                                                      delegate: nil,
+                                                      cancelButtonTitle: "Ok")
                 alert.show()
             }
         }
     }
     
     func show_toast_message(message : String) {
-        let toastLabel = UILabel(frame: CGRect(x: self.view.frame.size.width/11, y: self.view.frame.size.height - self.view.frame.size.height/4.75, width: self.view.frame.size.width/1.2, height: 300))
+        let toastLabel = UILabel()
+        toastLabel.frame = CGRect(x: self.view.frame.size.width/11,
+                                  y: self.view.frame.size.height - self.view.frame.size.height/4.75,
+                                  width: self.view.frame.size.width/1.2,
+                                  height: 300)
         toastLabel.backgroundColor = UIColor.black.withAlphaComponent(1)
         toastLabel.textColor = UIColor.white
         toastLabel.textAlignment = .center
@@ -160,7 +172,7 @@ class GoogleProductPhotosController: UIViewController {
         }
     }
     
-    @objc func share_facebook(sender: UIBarButtonItem!) {
+    @objc func facebook_share(sender: UIBarButtonItem!) {
         var search_url = "https://www.facebook.com/dialog/share?app_id=867509633598269&display=popup&href="
         
         search_url = [search_url, self.item_url, "&quote="].joined(separator: "")
@@ -183,30 +195,29 @@ class GoogleProductPhotosController: UIViewController {
         UIApplication.shared.open(url)
     }
     
+    
+    
     @objc func wish_list(sender: UIBarButtonItem!) {
-        print("IN WISHLIST PRESSED")
         if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
-            var wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
+            var wishlist = UserDefaults.standard.object(
+                [String: wishlist_table_cell_contents].self,
+                with: "wishlist") as! [String: wishlist_table_cell_contents]
             if wishlist.count != 0 {
-                //                print(wishlist[String(sender.tag)])
                 if wishlist[self.selected_product_id] != nil {
-                    //Remove from wishlist
-                    print("IN REMOVE")
                     var message = ""
                     message += wishlist[self.selected_product_id]!.name!
                     message += " was removed from the Wish List"
                     show_toast_message(message: message)
                     
                     wishlist.removeValue(forKey: self.selected_product_id)
-                    print(wishlist)
-                    if wishlist.count == 0 {
-                        UserDefaults.standard.removeObject(forKey: "wishlist")
-                    } else {
+                    if wishlist.count != 0 {
                         UserDefaults.standard.set(object: wishlist, forKey: "wishlist")
+                    } else {
+                        UserDefaults.standard.removeObject(forKey: "wishlist")
                     }
                     let facebook_button = UIButton.init(type: .custom)
                     facebook_button.setImage(UIImage.init(named: "facebook")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
-                    facebook_button.addTarget(self, action:#selector(share_facebook), for:.touchUpInside)
+                    facebook_button.addTarget(self, action:#selector(facebook_share), for:.touchUpInside)
                     facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
                     let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
                     
@@ -217,8 +228,6 @@ class GoogleProductPhotosController: UIViewController {
                     let wish_list_bar_button = UIBarButtonItem.init(customView: wish_list_button)
                     self.tabBarController?.navigationItem.rightBarButtonItems = [wish_list_bar_button, facebook_bar_button]
                 } else {
-                    // Add item to wishlist
-                    print("IN ADD")
                     var message = ""
                     var wishlist_cell = wishlist_table_cell_contents()
                     wishlist_cell.item_id = self.selected_product_id
@@ -232,18 +241,16 @@ class GoogleProductPhotosController: UIViewController {
                     wishlist_cell.condition = self.condition
                     wishlist_cell.handling_time = self.handling_time
                     wishlist_cell.global_shipping = self.global_shipping
-                    //                print(wishlist_cell)
                     
                     message += self.selected_product_name
                     message += " was added to the Wish List"
                     show_toast_message(message: message)
                     
                     wishlist[self.selected_product_id] = wishlist_cell
-                    //                print(wishlist)
                     UserDefaults.standard.set(object: wishlist, forKey: "wishlist")
                     let facebook_button = UIButton.init(type: .custom)
                     facebook_button.setImage(UIImage.init(named: "facebook")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
-                    facebook_button.addTarget(self, action:#selector(share_facebook), for:.touchUpInside)
+                    facebook_button.addTarget(self, action:#selector(facebook_share), for:.touchUpInside)
                     facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
                     let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
                     
@@ -255,8 +262,6 @@ class GoogleProductPhotosController: UIViewController {
                     self.tabBarController?.navigationItem.rightBarButtonItems = [wish_list_bar_button, facebook_bar_button]
                 }
             } else {
-                print("IN ELSE CONDITION")
-                //Create wishlist and add in wishlist
                 var message = ""
                 var wishlist_cell = wishlist_table_cell_contents()
                 wishlist_cell.item_id = self.selected_product_id
@@ -279,7 +284,7 @@ class GoogleProductPhotosController: UIViewController {
                 UserDefaults.standard.set(object: wishlist, forKey: "wishlist")
                 let facebook_button = UIButton.init(type: .custom)
                 facebook_button.setImage(UIImage.init(named: "facebook")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
-                facebook_button.addTarget(self, action:#selector(share_facebook), for:.touchUpInside)
+                facebook_button.addTarget(self, action:#selector(facebook_share), for:.touchUpInside)
                 facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
                 let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
                 
@@ -315,7 +320,7 @@ class GoogleProductPhotosController: UIViewController {
             UserDefaults.standard.set(object: wishlist, forKey: "wishlist")
             let facebook_button = UIButton.init(type: .custom)
             facebook_button.setImage(UIImage.init(named: "facebook")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
-            facebook_button.addTarget(self, action:#selector(share_facebook), for:.touchUpInside)
+            facebook_button.addTarget(self, action:#selector(facebook_share), for:.touchUpInside)
             facebook_button.frame = CGRect.init(x: 0, y: 0, width: 30, height: 30) //CGRectMake(0, 0, 30, 30)
             let facebook_bar_button = UIBarButtonItem.init(customView: facebook_button)
             
