@@ -302,7 +302,7 @@ class SearchController: UIViewController, UITextFieldDelegate, UITableViewDelega
             break
             
         case "product_list_segue":
-            let plc = segue.destination as! ProductListViewController
+            let plc = segue.destination as! ProductListController
             plc.product_keyword = product_keyword
             plc.product_category = category_map[product_category]!
             

@@ -363,7 +363,7 @@
         <!--Search Results-->
         <scene sceneID="Ymd-44-wPv">
             <objects>
-                <viewController storyboardIdentifier="product_details_view" useStoryboardIdentifierAsRestorationIdentifier="YES" id="QE4-xb-Al1" customClass="ProductListViewController" customModule="Homework9" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="product_details_view" useStoryboardIdentifierAsRestorationIdentifier="YES" id="QE4-xb-Al1" customClass="ProductListController" customModule="Homework9" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="gOC-JK-oHt">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
