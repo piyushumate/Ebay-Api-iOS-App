@@ -38,7 +38,7 @@ class wishlist_table_cell : UITableViewCell {
     @IBOutlet weak var table_cell_product_price: UILabel!
 }
 
-class ViewController: UIViewController, UITextFieldDelegate, UITableViewDelegate, UITableViewDataSource {
+class SearchController: UIViewController, UITextFieldDelegate, UITableViewDelegate, UITableViewDataSource {
     
     @IBOutlet weak var segmented_control: UISegmentedControl!
     @IBOutlet weak var search_form_view: UIView!
@@ -85,15 +85,27 @@ class ViewController: UIViewController, UITextFieldDelegate, UITableViewDelegate
     var distance = "10"
     var zip_code = "90089"
     
+    let category_map = [
+        "All Categories": "all",
+        "Art"   :"art",
+        "Baby"  :"baby",
+        "Books" :"books",
+        "Clothing, Shoes & Accessories" :"clothing",
+        "Computers/Tablets & Networking" :"computers",
+        "Health & Beauty" :"health",
+        "Music" :"music",
+        "Video Games & Consoles" :"games"
+    ]
+
     let product_categories:[[String]] = [["All Categories",
-                                             "Art",
-                                             "Baby",
-                                             "Books",
-                                             "Clothing, Shoes & Accessories",
-                                             "Computers/Tablets & Networking",
-                                             "Health & Beauty",
-                                             "Music",
-                                             "Video Games & Consoles"]]
+                                          "Art",
+                                          "Baby",
+                                          "Books",
+                                          "Clothing, Shoes & Accessories",
+                                          "Computers/Tablets & Networking",
+                                          "Health & Beauty",
+                                          "Music",
+                                          "Video Games & Consoles"]]
     
     let http_headers: HTTPHeaders = [
         "Accept": "application/json"
@@ -102,7 +114,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITableViewDelegate
     override func viewWillAppear(_ animated: Bool) {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-//        UserDefaults.standard.removeObject(forKey: "wishlist")
+        //        UserDefaults.standard.removeObject(forKey: "wishlist")
         if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
             let wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
             print(wishlist.count)
@@ -168,11 +180,10 @@ class ViewController: UIViewController, UITextFieldDelegate, UITableViewDelegate
         zipcode_textfield.delegate = self
         zipcode_textfield.addTarget(self, action: #selector(textFieldDidChange(_ :)), for: .editingChanged)
         
-        ip_api_location_request {ip_api_information in
-            self.ip_api_dictionary = ip_api_information}
+        get_ip_api_location {ip_api_information in self.ip_api_dictionary = ip_api_information}
         
         let category_picker = McPicker(data: product_categories)
-//        category_picker.delegate = self
+        //        category_picker.delegate = self
         product_category_selector.inputViewMcPicker = category_picker
         product_category_selector.selectionChangedHandler = {[weak product_category_selector] (selected_category, changed_category) in product_category_selector?.text = selected_category[changed_category]!}
         product_category_selector.doneHandler = {[weak product_category_selector] (selected_category) in product_category_selector?.text = selected_category[0]!}
@@ -183,7 +194,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITableViewDelegate
             }
         }
         
-        custom_location_switch.addTarget(self, action: #selector(ViewController.toggleSwitch), for: .valueChanged)
+        custom_location_switch.addTarget(self, action: #selector(SearchController.toggleSwitch), for: .valueChanged)
         
         new_checkbox.addTarget(self, action: #selector(checkbox_clicked(sender:)), for: .touchUpInside)
         used_checkbox.addTarget(self, action: #selector(checkbox_clicked(sender:)), for: .touchUpInside)
@@ -199,25 +210,22 @@ class ViewController: UIViewController, UITextFieldDelegate, UITableViewDelegate
             if self.ip_api_dictionary["zip"] == nil {
                 self.zip_code = self.ip_api_dictionary["zip"] as! String
             }
-//            print(self.zip_code)
+            //            print(self.zip_code)
         }
     }
-	
+
     @IBAction func toggleSwitch(_ sender: UISwitch) {
-        if custom_location_switch.isOn {
-            zipcode_textfield.isHidden = false
-            ip_api_zipcodes_request{zip_codes in
-                self.zip_code_suggestion = zip_codes}
-        } else {
-            zipcode_textfield.isHidden = true
-            ip_api_location_request {ip_api_information in
-                self.ip_api_dictionary = ip_api_information}
-        
+        var isHidden = false
+        if !custom_location_switch.isOn {
+            isHidden = true
+            get_ip_api_location {ip_api_info in self.ip_api_dictionary = ip_api_info}
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.0) {
                 self.zip_code = self.ip_api_dictionary["zip"] as! String
-                //            print(self.zip_code)
             }
+        } else {
+            get_ip_api_zipcodes{zip_codes in self.zip_code_suggestion = zip_codes}
         }
+        zipcode_textfield.isHidden = isHidden
     }
     
     func show_toast_message(message : String) {
@@ -277,272 +285,244 @@ class ViewController: UIViewController, UITextFieldDelegate, UITableViewDelegate
         
         if (product_keyword.trimmingCharacters(in: CharacterSet.whitespaces)).isEmpty {
             show_toast_message(message: "Keyword Is Mandatory")
-        } else if custom_location_switch.isOn && (zip_code.trimmingCharacters(in: CharacterSet.whitespaces)).isEmpty {
-            show_toast_message(message: "Zipcode Is Mandatory")
-        } else {
-            self.performSegue(withIdentifier: "product_list_segue", sender: self)
+            return
         }
+
+        if custom_location_switch.isOn && (zip_code.trimmingCharacters(in: CharacterSet.whitespaces)).isEmpty {
+            show_toast_message(message: "Zipcode Is Mandatory")
+            return
+        }
+        self.performSegue(withIdentifier: "product_list_segue", sender: self)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        print(zip_code)
-        if segue.identifier == "product_list_segue" {
-            let product_list_view_controller = segue.destination as! ProductListViewController
-            product_list_view_controller.product_keyword = product_keyword
-            product_list_view_controller.product_category = product_category
-            product_list_view_controller.new_condition = String(new_condition)
-            product_list_view_controller.used_condition = String(used_condition)
-            product_list_view_controller.unspecified_condition = String(unspecified_condition)
-            product_list_view_controller.local_pickup = String(local_pickup)
-            product_list_view_controller.free_shipping = String(free_shipping)
-            product_list_view_controller.distance = distance
-            product_list_view_controller.zip_code = zip_code
-        }
-        if segue.identifier == "product_details_segue" {
-            let selected_index = wish_list_table.indexPathForSelectedRow!.row
-            let product = wishlist_items[selected_index]
+        switch segue.identifier {
+        case "product_details_segue":
+            let product = wishlist_items[wish_list_table.indexPathForSelectedRow!.row]
             let dashboardController = segue.destination as! ProductDetailsViewController
-            let product_details = dashboardController.viewControllers![0] as! ProductInformation
-            product_details.selected_product_id = String(product.item_id!)
-            product_details.handling_time = String(product.handling_time!)
-            product_details.global_shipping = String(product.global_shipping!)
-            product_details.shipping = String(product.shipping!)
-            product_details.shipping_symbol = String(product.shipping_symbol!)
+            let prod_details = dashboardController.viewControllers![0] as! ProductInformation
+            prod_details.selected_product_id = String(product.item_id!)
+            prod_details.handling_time = String(product.handling_time!)
+            prod_details.global_shipping = String(product.global_shipping!)
+
+            prod_details.shipping = String(product.shipping!)
+            prod_details.shipping_symbol = String(product.shipping_symbol!)
+            break
+
+        case "product_list_segue":
+            let plc = segue.destination as! ProductListViewController
+            plc.product_keyword = product_keyword
+            plc.product_category = category_map[product_category]!
+
+            plc.local_pickup = String(local_pickup)
+            plc.free_shipping = String(free_shipping)
+
+            plc.new_condition = String(new_condition)
+            plc.used_condition = String(used_condition)
+            plc.unspecified_condition = String(unspecified_condition)
+
+            plc.distance = distance
+            plc.zip_code = zip_code
+
+            break
+
+        default:
+            break
         }
+    }
+
+    func clear_checkbox(checkbox: UIButton!,  flag: inout Bool) {
+        checkbox.isSelected = false
+        flag = false
     }
     
     @objc func clear_form(sender: UIButton!) {
+        clear_checkbox(checkbox: new_checkbox, flag: &new_condition)
+        clear_checkbox(checkbox: used_checkbox, flag: &used_condition)
+        clear_checkbox(checkbox: unspecified_checkbox, flag: &unspecified_condition)
+        clear_checkbox(checkbox: pickup_checkbox, flag: &local_pickup)
+        clear_checkbox(checkbox: free_shipping_checkbox, flag: &free_shipping)
+        
         product_keyword_textfield.text = ""
         product_category_selector.text = "All Categories"
-        
-        new_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-        new_checkbox.isSelected = false
-        new_condition = false
-        
-        used_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-        used_checkbox.isSelected = false
-        used_condition = false
-        
-        unspecified_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-        unspecified_checkbox.isSelected = false
-        unspecified_condition = false
-        
-        pickup_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-        pickup_checkbox.isSelected = false
-        local_pickup = false
-        
-        free_shipping_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-        free_shipping_checkbox.isSelected = false
-        free_shipping = false
-        
         distance_textfield.text = ""
+        zipcode_textfield.text = ""
         
         custom_location_switch.isOn = false
-        zipcode_textfield.text = ""
         zipcode_textfield.isHidden = true
     }
     
-    func ip_api_location_request(completion: @escaping(_ : Dictionary<String,Any>) -> ())
+    func get_ip_api_location(completion: @escaping(_ : Dictionary<String,Any>) -> ())
     {
         Alamofire.request("http://ip-api.com/json", method: .get, encoding:JSONEncoding.default, headers: http_headers).responseJSON { (response:DataResponse<Any>) in
-            var result_dictionary = Dictionary<String,Any>()
+            var result = Dictionary<String,Any>()
             switch(response.result) {
-            case .success(_):
-                if response.result.value != nil {
-                    result_dictionary = response.result.value! as! Dictionary<String,Any>
-//                    print(result_dictionary)
-                }
-                break
                 
             case .failure(_):
                 if response.result.error != nil {
                     print(response.result.error!)
                 }
                 break
+                
+            case .success(_):
+                if response.result.value != nil {
+                    result = response.result.value! as! Dictionary<String,Any>
+                }
+                break
+                
             }
-            completion(result_dictionary)
+            completion(result)
         }
     }
     
-    func ip_api_zipcodes_request(completion: @escaping(_ : Dictionary<String,Any>) -> ())
+    func get_ip_api_zipcodes(completion: @escaping(_ : Dictionary<String,Any>) -> ())
     {
-        var url = "http://assignment9-env.jmt4k6j8tq.us-east-2.elasticbeanstalk.com/search_zip_codes?zip_code="
+        var url = "http://csci571homework8-env.crc386dumd.us-east-2.elasticbeanstalk.com/get_zip?zip-code="
+        
         url += self.zipcode_textfield?.text as! String
+        
         Alamofire.request(url, method: .get, encoding:JSONEncoding.default, headers: http_headers).responseJSON { (response:DataResponse<Any>) in
-            var result_dictionary = Dictionary<String,Any>()
+            var result = Dictionary<String,Any>()
             switch(response.result) {
-            case .success(_):
-                if response.result.value != nil {
-                    result_dictionary = response.result.value! as! Dictionary<String,Any>
-                }
-                break
-                
             case .failure(_):
                 if response.result.error != nil {
                     print(response.result.error!)
                 }
                 break
+                
+            case .success(_):
+                if response.result.value != nil {
+                    result = response.result.value! as! Dictionary<String,Any>
+                }
+                break
             }
-            completion(result_dictionary)
+            completion(result)
         }
     }
     
     @IBAction func segmented_control_change(_ sender: Any) {
+        let search_view = 0
+        let wish_list = 1
         switch segmented_control.selectedSegmentIndex {
-            case 0:
-//                zip_code = "90007"
-                search_form_view.isHidden = false
-                wish_list_view.isHidden = true
-                break
-            case 1:
-                search_form_view.isHidden = true
-                wish_list_view.isHidden = false
-                if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
-                    let wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
-                    print(wishlist.count)
-                    if wishlist.count == 0 {
-                        wish_list_table.isHidden = true
-                        wish_list_total_label.isHidden = true
-                        wish_list_total_items_label.isHidden = true
-                        wish_list_empty_label.isHidden = false
-                    }
-                    else {
-                        // Display wishlist
-                        var total_price = 0.0
-                        wishlist_items = [wishlist_table_cell_contents]()
-                        
-                        for wishlist_item in wishlist {
-                            wishlist_items.append(wishlist_item.value)
-                        }
-                        
-                        for wishlist_item in wishlist_items {
-                            let price = Double(wishlist_item.price!)
-                            total_price += price!
-                        }
-                        
-                        var currency_symbol = ""
-                        let wishlist_item = wishlist_items[0] as! wishlist_table_cell_contents
-                        var locale = NSLocale(localeIdentifier: wishlist_item.currency_symbol!)
-                        if locale.displayName(forKey: .currencySymbol, value: wishlist_item.currency_symbol!) == wishlist_item.currency_symbol! {
-                            let newlocale = NSLocale(localeIdentifier: wishlist_item.currency_symbol!.dropLast() + "_en")
-                            currency_symbol = newlocale.displayName(forKey: .currencySymbol, value: wishlist_item.currency_symbol!)!
-                        } else {
-                            currency_symbol = locale.displayName(forKey: .currencySymbol, value: wishlist_item.currency_symbol!)!
-                        }
-                        
-                        wish_list_total_label?.text = (currency_symbol + String(total_price))
-                        wish_list_total_label.isHidden = false
-                        var wishlist_total_items = "WishList Total("
-                        wishlist_total_items += String(wishlist_items.count)
-                        wishlist_total_items += " items):"
-                        wish_list_total_items_label?.text = wishlist_total_items
-                        wish_list_total_items_label.isHidden = false
-                        wish_list_table.isHidden = false
-                        wish_list_empty_label.isHidden = true
-                        wish_list_table.reloadData()
-                    }
-                } else {
-                    wish_list_table.isHidden = true
-                    wish_list_total_label.isHidden = true
-                    wish_list_total_items_label.isHidden = true
-                    wish_list_empty_label.isHidden = false
-                }
-                break
-            default:
-                break
+        case search_view:
+            search_form_view.isHidden = false
+            wish_list_view.isHidden = true
+            break
+        case wish_list:
+            search_form_view.isHidden = true
+            wish_list_view.isHidden = false
+            update_wish_list()
+            break
+        default:
+            break
         }
+    }
+    
+    func update_wish_list() {
+        if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") == nil {
+            wish_list_table.isHidden = true
+            wish_list_total_label.isHidden = true
+            wish_list_total_items_label.isHidden = true
+            wish_list_empty_label.isHidden = false
+        } else {
+            
+            let wishlist = UserDefaults.standard.object(
+                [String: wishlist_table_cell_contents].self,
+                with: "wishlist") as! [String: wishlist_table_cell_contents]
+            
+            if 0 != wishlist.count {
+
+                var total_price = 0.0
+                wishlist_items = [wishlist_table_cell_contents]()
+                
+                for wishlist_item in wishlist {
+                    wishlist_items.append(wishlist_item.value)
+                    let price = Double(wishlist_item.value.price!)
+                    total_price += price!
+                }
+                
+                var currency_symbol = ""
+                let wishlist_item = wishlist_items[0] as! wishlist_table_cell_contents
+                var locale = NSLocale(localeIdentifier: wishlist_item.currency_symbol!)
+                if locale.displayName(forKey: .currencySymbol, value: wishlist_item.currency_symbol!) == wishlist_item.currency_symbol! {
+                    let newlocale = NSLocale(localeIdentifier: wishlist_item.currency_symbol!.dropLast() + "_en")
+                    currency_symbol = newlocale.displayName(forKey: .currencySymbol, value: wishlist_item.currency_symbol!)!
+                } else {
+                    currency_symbol = locale.displayName(forKey: .currencySymbol, value: wishlist_item.currency_symbol!)!
+                }
+                
+                wish_list_total_label?.text = (currency_symbol + String(total_price))
+                wish_list_total_label.isHidden = false
+                let wishlist_total_items = ["WishList Total(",
+                                            String(wishlist_items.count),
+                                            " items):"].joined(separator: "")
+                wish_list_total_items_label?.text = wishlist_total_items
+                
+                wish_list_total_items_label.isHidden = false
+                wish_list_table.isHidden = false
+                wish_list_empty_label.isHidden = true
+                wish_list_table.reloadData()
+
+            }
+            else {
+                wish_list_table.isHidden = true
+                wish_list_total_label.isHidden = true
+                wish_list_total_items_label.isHidden = true
+                wish_list_empty_label.isHidden = false
+            }
+        }
+    }
+    
+    func toggle_checkbox(checkbox: UIButton!,  flag: inout Bool) {
+        flag = !flag;
+        checkbox.isSelected = !checkbox.isSelected;
+        checkbox.setBackgroundImage(UIImage(named: flag ? "checked" : "uwnchecked"), for: flag ? .selected:.normal)
     }
     
     @IBAction func checkbox_clicked(sender: UIButton)
     {
-        // Instead of specifying each button we are just using the sender (button that invoked) the method
         switch sender {
-            case new_checkbox:
-                if new_checkbox.isSelected == true {
-                    new_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-                    new_checkbox.isSelected = false
-                    new_condition = false
-                } else {
-                    new_checkbox.setBackgroundImage(UIImage(named: "checked"), for: .selected)
-                    new_checkbox.isSelected = true
-                    new_condition = true
-                }
-                break
-            case used_checkbox:
-                if used_checkbox.isSelected == true {
-                    used_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-                    used_checkbox.isSelected = false
-                    used_condition = false
-                } else {
-                    used_checkbox.setBackgroundImage(UIImage(named: "checked"), for: .selected)
-                    used_checkbox.isSelected = true
-                    used_condition = true
-                }
-                break
-            case unspecified_checkbox:
-                if unspecified_checkbox.isSelected == true {
-                    unspecified_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-                    unspecified_checkbox.isSelected = false
-                    unspecified_condition = false
-                } else {
-                    unspecified_checkbox.setBackgroundImage(UIImage(named: "checked"), for: .selected)
-                    unspecified_checkbox.isSelected = true
-                    unspecified_condition = true
-                }
-                break
-            case pickup_checkbox:
-                if pickup_checkbox.isSelected == true {
-                    pickup_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-                    pickup_checkbox.isSelected = false
-                    local_pickup = false
-                } else {
-                    pickup_checkbox.setBackgroundImage(UIImage(named: "checked"), for: .selected)
-                    pickup_checkbox.isSelected = true
-                    local_pickup = true
-                }
-                break
-            case free_shipping_checkbox:
-                if free_shipping_checkbox.isSelected == true {
-                    free_shipping_checkbox.setBackgroundImage(UIImage(named: "unchecked"), for: .normal)
-                    free_shipping_checkbox.isSelected = false
-                    free_shipping = false
-                } else {
-                    free_shipping_checkbox.setBackgroundImage(UIImage(named: "checked"), for: .selected)
-                    free_shipping_checkbox.isSelected = true
-                    free_shipping = true
-                }
-                break
-            default:
-                break
+        case new_checkbox:
+            toggle_checkbox(checkbox: new_checkbox, flag: &new_condition)
+            break
+        case used_checkbox:
+            toggle_checkbox(checkbox: used_checkbox, flag: &used_condition)
+            break
+        case unspecified_checkbox:
+            toggle_checkbox(checkbox: unspecified_checkbox, flag: &unspecified_condition)
+            break
+        case pickup_checkbox:
+            toggle_checkbox(checkbox: pickup_checkbox, flag: &local_pickup)
+            break
+        case free_shipping_checkbox:
+            toggle_checkbox(checkbox: free_shipping_checkbox, flag: &free_shipping)
+            break
+        default:
+            break
         }
     }
     
-    //textField: UITextField, shouldChangeCharactersInRange range: NSRange, replacementString string: String) -> Bool
+    
     @objc func textFieldDidChange(_ textfield: UITextField) {
         textfield.isHidden = false
-        let zipcode = textfield.text! as String
-        print(zipcode)
-        get_autocomplete_entries(zipcode: zipcode)
-//        return true
+        get_autocomplete_entries(zipcode: textfield.text! as String)
     }
     
     func get_autocomplete_entries(zipcode: String) {
-        ip_api_zipcodes_request{zip_codes in
-            self.zip_code_suggestion = zip_codes}
+        get_ip_api_zipcodes {zip_codes in self.zip_code_suggestion = zip_codes}
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.zip_codes = self.zip_code_suggestion["data"] as! [Any]
-            print(self.zip_codes)
             self.zipcode_table.isHidden = false
             self.zipcode_table.reloadData()
         }
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if tableView == zipcode_table {
-            return self.zip_codes.count
-        } else {
+        if tableView != zipcode_table {
             return self.wishlist_items.count
+        } else {
+            return self.zip_codes.count
         }
     }
     
@@ -551,7 +531,6 @@ class ViewController: UIViewController, UITextFieldDelegate, UITableViewDelegate
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-//        print(tableView)
         if tableView == self.zipcode_table {
             let cell = tableView.dequeueReusableCell(withIdentifier: "Zipcode_Cell", for: indexPath) as! zipcode_table_cell
             let zipcode = zip_codes[indexPath.row] as! String
@@ -600,37 +579,48 @@ class ViewController: UIViewController, UITextFieldDelegate, UITableViewDelegate
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if tableView == self.zipcode_table {
+        if tableView != self.zipcode_table {
+            selected_row = indexPath
+        } else {
             zipcode_textfield.text = zip_codes[indexPath.row] as! String
             zip_code = zip_codes[indexPath.row] as! String
             zipcode_table.isHidden = true
             zipcode_textfield.endEditing(true)
-        } else {
-            selected_row = indexPath
         }
     }
     
     func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        if tableView == self.wish_list_table {
-            return true
-        } else {
+        if tableView != self.wish_list_table {
             return false
+        } else {
+            return true
         }
     }
     
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if tableView == self.wish_list_table {
-            if (editingStyle == .delete) {
-                // handle delete (by removing the data from your array and updating the tableview)
+            switch editingStyle {
+            case .delete:
                 let product = wishlist_items[indexPath.row]
-                var message = ""
-                message += product.name!
+                var message = product.name!
                 
-                if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
-                    var wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
+                if UserDefaults.standard.object(
+                    [String: wishlist_table_cell_contents].self,
+                    with: "wishlist") == nil {
+                    wishlist_items = [wishlist_table_cell_contents]()
+                    wish_list_total_label.isHidden = true
+                    wish_list_total_items_label.isHidden = true
+                    wish_list_table.isHidden = true
+                    wish_list_empty_label.isHidden = false
+                    
+                } else {
+                    
+                    var wishlist = UserDefaults.standard.object(
+                        [String: wishlist_table_cell_contents].self,
+                        with: "wishlist") as! [String: wishlist_table_cell_contents]
                     wishlist.removeValue(forKey: String(product.item_id!))
-                    print(wishlist_items)
-                    if wishlist.count == 0 {
+                    
+                    if 0 == wishlist.count {
                         UserDefaults.standard.removeObject(forKey: "wishlist")
                         wishlist_items = [wishlist_table_cell_contents]()
                         wish_list_total_label.isHidden = true
@@ -643,12 +633,9 @@ class ViewController: UIViewController, UITextFieldDelegate, UITableViewDelegate
                         var total_price = 0.0
                         for wishlist_item in wishlist {
                             wishlist_items.append(wishlist_item.value)
+                            total_price += Double(wishlist_item.value.price!)!
                         }
                         
-                        for wishlist_item in wishlist_items {
-                            let price = Double(wishlist_item.price!)
-                            total_price += price!
-                        }
                         
                         var currency_symbol = ""
                         let wishlist_item = wishlist_items[0] as! wishlist_table_cell_contents
@@ -662,25 +649,20 @@ class ViewController: UIViewController, UITextFieldDelegate, UITableViewDelegate
                         
                         wish_list_total_label?.text = (currency_symbol + String(total_price))
                         wish_list_total_label.isHidden = false
-                        var wishlist_total_items = "WishList Total("
-                        wishlist_total_items += String(wishlist_items.count)
-                        wishlist_total_items += " items):"
+                        let wishlist_total_items = ["WishList Total(",
+                                                    String(wishlist_items.count),
+                                                    " items):"].joined(separator: "")
                         wish_list_total_items_label?.text = wishlist_total_items
                         wish_list_total_items_label.isHidden = false
                         wish_list_table.isHidden = false
                         wish_list_empty_label.isHidden = true
                         wish_list_table.reloadData()
                     }
-                    message += " was removed from the Wish List"
-                    print(message)
-                    wishlist_toast_message(message: message)
-                } else {
-                    wishlist_items = [wishlist_table_cell_contents]()
-                    wish_list_total_label.isHidden = true
-                    wish_list_total_items_label.isHidden = true
-                    wish_list_table.isHidden = true
-                    wish_list_empty_label.isHidden = false
+                    wishlist_toast_message(message: message + " was removed from the Wish List")
                 }
+                break
+            default:
+                break
             }
         }
     }
@@ -698,4 +680,3 @@ extension UserDefaults {
         self.set(data, forKey: key)
     }
 }
-
