@@ -2,6 +2,8 @@ import UIKit
 import Alamofire
 import SwiftyJSON
 import McPicker
+import Toast_Swift
+//import EasyToast
 
 struct wishlist_table_cell_contents: Codable {
     var item_id : String?
@@ -78,7 +80,7 @@ class SearchController: UIViewController, UITextFieldDelegate, UITableViewDelega
     var zip_code = "90089"
     
     let category_map = [
-        "All Categories": "all",
+        "All": "all",
         "Art"   :"art",
         "Baby"  :"baby",
         "Books" :"books",
@@ -89,7 +91,7 @@ class SearchController: UIViewController, UITextFieldDelegate, UITableViewDelega
         "Video Games & Consoles" :"games"
     ]
     
-    let product_categories:[[String]] = [["All Categories",
+    let product_categories:[[String]] = [["All",
                                           "Art",
                                           "Baby",
                                           "Books",
@@ -179,9 +181,9 @@ class SearchController: UIViewController, UITextFieldDelegate, UITableViewDelega
         product_category_selector.inputViewMcPicker = category_picker
         product_category_selector.selectionChangedHandler = {[weak product_category_selector] (selected_category, changed_category) in product_category_selector?.text = selected_category[changed_category]!}
         product_category_selector.doneHandler = {[weak product_category_selector] (selected_category) in product_category_selector?.text = selected_category[0]!}
-        product_category_selector.cancelHandler = {[weak product_category_selector] in product_category_selector?.text = "All Categories"}
+        product_category_selector.cancelHandler = {[weak product_category_selector] in product_category_selector?.text = "All"}
         product_category_selector.textFieldWillBeginEditingHandler = {[weak product_category_selector] (selecte_category) in
-            if product_category_selector?.text == "All Categories" {
+            if product_category_selector?.text == "All" {
                 product_category_selector?.text = selecte_category[0]
             }
         }
@@ -221,44 +223,7 @@ class SearchController: UIViewController, UITextFieldDelegate, UITableViewDelega
     }
     
     func show_toast_message(message : String) {
-        let toastLabel = UILabel(frame: CGRect(x: self.view.frame.size.width/2 - 100, y: self.view.frame.size.height - 100, width: 200, height: 35))
-        toastLabel.backgroundColor = UIColor.black.withAlphaComponent(0.6)
-        toastLabel.textColor = UIColor.white
-        toastLabel.textAlignment = .center
-        toastLabel.font = UIFont(name: "Montserrat-Light", size: 12.0)
-        toastLabel.text = message
-        toastLabel.alpha = 1.0
-        toastLabel.layer.cornerRadius = 10
-        toastLabel.clipsToBounds  =  true
-        self.view.addSubview(toastLabel)
-        UIView.animate(withDuration: 4.0, delay: 0.1, options: .curveEaseOut, animations: {
-            toastLabel.alpha = 0.0
-        }, completion: {(isCompleted) in
-            toastLabel.removeFromSuperview()
-        })
-    }
-    
-    func wishlist_toast_message(message : String) {
-        print(message)
-        let toastLabel = UILabel(frame: CGRect(x: self.view.frame.size.width/11, y: self.view.frame.size.height - self.view.frame.size.height/8, width: self.view.frame.size.width/1.2, height: 300))
-        toastLabel.backgroundColor = UIColor.black.withAlphaComponent(1)
-        toastLabel.textColor = UIColor.white
-        toastLabel.textAlignment = .center
-        toastLabel.font = UIFont(name: "Montserrat-Light", size: 1.0)
-        toastLabel.text = message
-        toastLabel.adjustsFontSizeToFitWidth = true
-        toastLabel.alpha = 1.0
-        toastLabel.layer.cornerRadius = 7
-        toastLabel.clipsToBounds  =  true
-        toastLabel.lineBreakMode = .byWordWrapping
-        toastLabel.numberOfLines = 4
-        toastLabel.sizeToFit()
-        self.view.addSubview(toastLabel)
-        UIView.animate(withDuration: 8.0, delay: 0.1, options: .curveEaseOut, animations: {
-            toastLabel.alpha = 0.0
-        }, completion: {(isCompleted) in
-            toastLabel.removeFromSuperview()
-        })
+        self.view.makeToast(message, duration: 3.0, position: .bottom, style: ToastStyle())
     }
     
     @objc func search_query(sender: UIButton!) {
@@ -336,7 +301,7 @@ class SearchController: UIViewController, UITextFieldDelegate, UITableViewDelega
         clear_checkbox(checkbox: free_shipping_checkbox, flag: &free_shipping)
         
         product_keyword_textfield.text = ""
-        product_category_selector.text = "All Categories"
+        product_category_selector.text = "All"
         distance_textfield.text = ""
         zipcode_textfield.text = ""
         
@@ -650,7 +615,8 @@ class SearchController: UIViewController, UITextFieldDelegate, UITableViewDelega
                         wish_list_empty_label.isHidden = true
                         wish_list_table.reloadData()
                     }
-                    wishlist_toast_message(message: message + " was removed from the Wish List")
+                    
+                    show_toast_message(message: message + " was removed from the Wish List")
                 }
                 break
             default:

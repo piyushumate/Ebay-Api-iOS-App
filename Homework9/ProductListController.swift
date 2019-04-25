@@ -2,6 +2,7 @@ import UIKit
 import Alamofire
 import SwiftyJSON
 import SwiftSpinner
+import Toast_Swift
 
 struct products_list_table_cell_contents {
     var item_id : String?
@@ -47,15 +48,6 @@ class ProductListController: UIViewController, UITableViewDelegate, UITableViewD
     var request_url = "http://csci571homework8-env.crc386dumd.us-east-2.elasticbeanstalk.com/products"
     
     var input_query_parameters = [String: Any] ()
-    let categories_map: [String: String] = ["All Categories" : "all_categories",
-                                            "Art" : "art",
-                                            "Baby" : "baby",
-                                            "Books" : "books",
-                                            "Clothing, Shoes & Accessories" : "clothing",
-                                            "Computers/Tablets & Networking" : "computers",
-                                            "Health & Beauty" : "health",
-                                            "Music" : "music",
-                                            "Video Games & Consoles" : "games"]
     
     var product_list_dictionary = Dictionary<String,Any> ()
     var products = [products_list_table_cell_contents]()
@@ -137,7 +129,6 @@ class ProductListController: UIViewController, UITableViewDelegate, UITableViewD
                         if self.is_continue(field: item_id) {
                             continue
                         }
-                        
                         
                         
                         let name = product["Name"] as! String
@@ -357,25 +348,7 @@ class ProductListController: UIViewController, UITableViewDelegate, UITableViewD
     }
     
     func show_toast_message(message : String) {
-        let toastLabel = UILabel(frame: CGRect(x: self.view.frame.size.width/11, y: self.view.frame.size.height - self.view.frame.size.height/8, width: self.view.frame.size.width/1.2, height: 300))
-        toastLabel.backgroundColor = UIColor.black.withAlphaComponent(1)
-        toastLabel.textColor = UIColor.white
-        toastLabel.textAlignment = .center
-        toastLabel.font = UIFont(name: "Montserrat-Light", size: 1.0)
-        toastLabel.text = message
-        toastLabel.adjustsFontSizeToFitWidth = true
-        toastLabel.alpha = 1.0
-        toastLabel.layer.cornerRadius = 7
-        toastLabel.clipsToBounds  =  true
-        toastLabel.lineBreakMode = .byWordWrapping
-        toastLabel.numberOfLines = 4
-        toastLabel.sizeToFit()
-        self.view.addSubview(toastLabel)
-        UIView.animate(withDuration: 8.0, delay: 0.1, options: .curveEaseOut, animations: {
-            toastLabel.alpha = 0.0
-        }, completion: {(isCompleted) in
-            toastLabel.removeFromSuperview()
-        })
+        self.view.makeToast(message, duration: 3.0, position: .bottom, style: ToastStyle())
     }
     
     @objc func wish_list_pressed(_ sender: UIButton!) {

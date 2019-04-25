@@ -10,6 +10,7 @@ import UIKit
 import SwiftSpinner
 import Alamofire
 import SwiftyJSON
+import Toast_Swift
 
 class product_info_table_cell: UITableViewCell {
     @IBOutlet weak var product_property: UILabel!
@@ -29,12 +30,7 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
     @IBOutlet weak var product_name: UILabel!
     @IBOutlet weak var product_price: UILabel!
     @IBOutlet weak var tableView: UITableView!
-//    override func viewDidLoad() {
-//        super.viewDidLoad()
-//        print("IN PRODUCT")
-//        print(self.required_product_info)
-//        // Do any additional setup after loading the view.
-//    }
+
 
     
     var selected_product_id = ""
@@ -54,11 +50,11 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
     
     var product_info_dictionary = Dictionary<String,Any> ()
     
-    var url = "http://assignment9-env.jmt4k6j8tq.us-east-2.elasticbeanstalk.com/search_single_product/"
     
-    let http_headers: HTTPHeaders = [
-        "Accept": "application/json"
-    ]
+    var url = "http://csci571homework8-env.crc386dumd.us-east-2.elasticbeanstalk.com/product/"
+//
+    
+    let http_headers: HTTPHeaders = ["Accept": "application/json"]
     
     override func viewDidLoad() {
         
@@ -78,8 +74,7 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
         if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
             var wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
             if wishlist.count != 0 {
-                //                print(wishlist[String(sender.tag)])
-                if wishlist[self.selected_product_id] != nil {
+                 if wishlist[self.selected_product_id] != nil {
                     let wish_list_button = UIButton.init(type: .custom)
                     wish_list_button.setImage(UIImage.init(named: "wishListFilled")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
                     wish_list_button.addTarget(self, action:#selector(wish_list), for:.touchUpInside)
@@ -110,32 +105,22 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
             let wish_list_bar_button = UIBarButtonItem.init(customView: wish_list_button)
             self.tabBarController?.navigationItem.rightBarButtonItems = [wish_list_bar_button, facebook_bar_button]
         }
-//        print(self.global_shipping)
-//        print(self.handling_time)
-//        print(self.selected_product_id)
-//        print(self.shipping)
-//        print(self.shipping_symbol)
-        
+
         ebay_request {product_information in
             self.product_info_dictionary = product_information}
         
         SwiftSpinner.show(delay: 0.0, title: "Fetching Product Details...", animated: true)
         DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) { // Change `4.0` to the desired number of seconds.
-//            print(self.product_info_dictionary)
+
             if self.product_info_dictionary["data"] != nil {
                 self.required_product_info = self.product_info_dictionary["data"] as! [String: Any]
                 
-//                print("IN PRODUCT INFO")
-
-                // Shipping Dictionary
                 if self.required_product_info["Seller"] != nil {
-//                    print(self.required_product_info["Seller"])
                     self.shipping_info_dictionary = self.required_product_info["Seller"] as! [String: Any]
                     self.required_product_info.removeValue(forKey: "Seller")
                 }
                 
                 if self.required_product_info["Storefront"] != nil {
-//                    print(self.required_product_info["Storefront"])
                     let storefront_dictionary = self.required_product_info["Storefront"] as! [String: String]
                     if storefront_dictionary["StoreName"] != nil {
                         self.shipping_info_dictionary["StoreName"] = storefront_dictionary["StoreName"]
@@ -157,9 +142,9 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
                     self.required_product_info.removeValue(forKey: "Return_Policy_(US)")
                 }
                 
-                if self.required_product_info["ReturnsAccepted"] != nil {
-                    self.shipping_info_dictionary["ReturnsAccepted"] = self.required_product_info["ReturnsAccepted"]
-                    self.required_product_info.removeValue(forKey: "ReturnsAccepted")
+                if self.required_product_info["Returns_Accepted"] != nil {
+                    self.shipping_info_dictionary["ReturnsAccepted"] = self.required_product_info["Returns_Accepted"]
+                    self.required_product_info.removeValue(forKey: "Returns_Accepted")
                 }
                 
                 if self.required_product_info["Refund"] != nil {
@@ -171,13 +156,13 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
                     self.shipping_info_dictionary["ShippingCostPaidBy"] = self.required_product_info["ShippingCostPaidBy"]
                     self.required_product_info.removeValue(forKey: "ShippingCostPaidBy")
                 }
-                
-//                print(self.shipping_info_dictionary)
+            
                 
                 // Photos
-                if self.required_product_info["Photo"] != nil {
-                    self.product_photos = self.required_product_info["Photo"] as! [String]
-                    self.required_product_info.removeValue(forKey: "Photo")
+                print(self.required_product_info)
+                if self.required_product_info["Product Images"] != nil {
+                    self.product_photos = self.required_product_info["Product Images"] as! [String]
+                    self.required_product_info.removeValue(forKey: "Product Images")
                 }
                 
                 self.page_control.numberOfPages = self.product_photos.count
@@ -233,9 +218,9 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
                     self.required_product_info.removeValue(forKey: "Price")
                 }
                 
-                if self.required_product_info["ViewItemURLForNaturalSearch"] != nil {
-                    self.item_url = self.required_product_info["ViewItemURLForNaturalSearch"] as! String
-                    self.required_product_info.removeValue(forKey: "ViewItemURLForNaturalSearch")
+                if self.required_product_info["item_url"] != nil {
+                    self.item_url = self.required_product_info["item_url"] as! String
+                    self.required_product_info.removeValue(forKey: "item_url")
                 }
                 
 //                print(self.product_photos)
@@ -311,7 +296,11 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
                 similar_items_tab.selected_product_price = self.selected_product_price
                 
             } else {
-                var alert : UIAlertView = UIAlertView(title: "No Product Details!", message: "Failed to fetch search results", delegate: nil, cancelButtonTitle: "Ok")
+                var alert : UIAlertView = UIAlertView(
+                    title: "No Product Details!",
+                    message: "Failed to fetch search results",
+                    delegate: nil,
+                    cancelButtonTitle: "Ok")
                 alert.show()
             }
             SwiftSpinner.hide()
@@ -319,33 +308,11 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
     }
     
     func show_toast_message(message : String) {
-        let toastLabel = UILabel(frame: CGRect(x: self.view.frame.size.width/11, y: self.view.frame.size.height - self.view.frame.size.height/4.9, width: self.view.frame.size.width/1.2, height: 300))
-        toastLabel.backgroundColor = UIColor.black.withAlphaComponent(1)
-        toastLabel.textColor = UIColor.white
-        toastLabel.textAlignment = .center
-        toastLabel.font = UIFont(name: "Montserrat-Light", size: 1.0)
-        toastLabel.text = message
-        toastLabel.adjustsFontSizeToFitWidth = true
-        toastLabel.alpha = 1.0
-        toastLabel.layer.cornerRadius = 7
-        toastLabel.clipsToBounds  =  true
-        toastLabel.lineBreakMode = .byWordWrapping
-        toastLabel.numberOfLines = 4
-        toastLabel.sizeToFit()
-        self.view.addSubview(toastLabel)
-        UIView.animate(withDuration: 8.0, delay: 0.1, options: .curveEaseOut, animations: {
-            toastLabel.alpha = 0.0
-        }, completion: {(isCompleted) in
-            toastLabel.removeFromSuperview()
-        })
+        self.view.makeToast(message, duration: 3.0, position: .bottom, style: ToastStyle())
     }
     
     func ebay_request(completion: @escaping(_ : Dictionary<String,Any>) -> ())
     {
-//                print(self.global_shipping)
-//                print(self.handling_time)
-//                print(self.shipping)
-//                print(self.shipping_symbol)
         url += self.selected_product_id
         Alamofire.request(url, method: .get, encoding:JSONEncoding.default, headers: http_headers).responseJSON { (response:DataResponse<Any>) in
             var result_dictionary = Dictionary<String,Any>()
@@ -399,36 +366,40 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
     }
     
     @objc func facebook_share(sender: UIBarButtonItem!) {
-        var search_url = "https://www.facebook.com/dialog/share?app_id=2161096860867733&display=popup&href="
-        search_url.append(self.item_url)
-        search_url.append("&quote=")
-        var message = "Buy "
-        message.append(self.selected_product_name)
-        message.append(" at ")
-        message.append(self.selected_product_price)
-        message.append(" from link below")
-        message = String(message).addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!
+        var search_url = "https://www.facebook.com/dialog/share?app_id=867509633598269&display=popup&href="
+        
+        search_url = [search_url, self.item_url, "&quote="].joined(separator: "")
+        
+        var message = [
+            "Buy",
+            self.selected_product_name,
+            "at",
+            self.selected_product_price,
+            "from Ebay!"].joined(separator: " ")
+        
+        var characterSet = CharacterSet.urlQueryAllowed
+        characterSet.remove(charactersIn: "?&=#")
+        message = String(message).addingPercentEncoding(withAllowedCharacters: characterSet)!
         search_url.append(String(message))
+        let hashtag = "#CSCI571Spring2019Ebay".addingPercentEncoding(withAllowedCharacters: characterSet)!
+        search_url.append("&hashtag="+hashtag)
         guard let url = URL(string: String(search_url)) else { return }
         UIApplication.shared.open(url)
     }
     
     @objc func wish_list(sender: UIBarButtonItem!) {
-        print("IN WISHLIST PRESSED")
         if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
             var wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
             if wishlist.count != 0 {
 //                print(wishlist[String(sender.tag)])
                 if wishlist[self.selected_product_id] != nil {
                     //Remove from wishlist
-                    print("IN REMOVE")
                     var message = ""
                     message += wishlist[self.selected_product_id]!.name!
                     message += " was removed from the Wish List"
                     show_toast_message(message: message)
                     
                     wishlist.removeValue(forKey: self.selected_product_id)
-                    print(wishlist)
                     if wishlist.count == 0 {
                         UserDefaults.standard.removeObject(forKey: "wishlist")
                     } else {
@@ -448,7 +419,6 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
                     self.tabBarController?.navigationItem.rightBarButtonItems = [wish_list_bar_button, facebook_bar_button]
                 } else {
                     // Add item to wishlist
-                    print("IN ADD")
                     var message = ""
                     var wishlist_cell = wishlist_table_cell_contents()
                     wishlist_cell.item_id = self.selected_product_id
@@ -485,7 +455,6 @@ class ProductInformation: UIViewController, UITableViewDelegate, UITableViewData
                     self.tabBarController?.navigationItem.rightBarButtonItems = [wish_list_bar_button, facebook_bar_button]
                 }
             } else {
-                print("IN ELSE CONDITION")
                 //Create wishlist and add in wishlist
                 var message = ""
                 var wishlist_cell = wishlist_table_cell_contents()

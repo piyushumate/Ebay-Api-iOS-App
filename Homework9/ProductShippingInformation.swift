@@ -8,6 +8,7 @@
 
 import UIKit
 import SwiftSpinner
+import Toast_Swift
 
 class custom_header_cell: UITableViewCell{
     @IBOutlet var header_label: UILabel!
@@ -96,7 +97,6 @@ class ProductShippingInformation: UIViewController, UITableViewDelegate, UITable
             self.tabBarController?.navigationItem.rightBarButtonItems = [wish_list_bar_button, facebook_bar_button]
         }
         
-//        ["HandlingTime": "1", "UserID": ryans_games, "ShippingCostPaidBy": Seller, "TopRatedSeller": 1, "ShippingCostSymbol": "USD", "StoreURL": "https://stores.ebay.com/id=52047988", "FeedbackScore": 23360, "StoreName": "Ryan&#39;s Games In Hawaii", "PositiveFeedbackPercent": 100, "GlobalShipping": "Yes", "ShippingCost": "0.0", "ReturnsAccepted": Returns Accepted, "Refund": Money back or replacement (buyer's choice), "FeedbackRatingStar": YellowShooting, "Return_Policy_(US)": Returns Accepted within 30 Days]
         
         if self.shipping_info_dictionary["StoreName"] != nil ||
             self.shipping_info_dictionary["FeedbackScore"] != nil ||
@@ -188,29 +188,10 @@ class ProductShippingInformation: UIViewController, UITableViewDelegate, UITable
             }
             SwiftSpinner.hide()
         }
-        print(tableData)
     }
     
     func show_toast_message(message : String) {
-        let toastLabel = UILabel(frame: CGRect(x: self.view.frame.size.width/11, y: self.view.frame.size.height - self.view.frame.size.height/4.75, width: self.view.frame.size.width/1.2, height: 300))
-        toastLabel.backgroundColor = UIColor.black.withAlphaComponent(1)
-        toastLabel.textColor = UIColor.white
-        toastLabel.textAlignment = .center
-        toastLabel.font = UIFont(name: "Montserrat-Light", size: 1.0)
-        toastLabel.text = message
-        toastLabel.adjustsFontSizeToFitWidth = true
-        toastLabel.alpha = 1.0
-        toastLabel.layer.cornerRadius = 7
-        toastLabel.clipsToBounds  =  true
-        toastLabel.lineBreakMode = .byWordWrapping
-        toastLabel.numberOfLines = 4
-        toastLabel.sizeToFit()
-        self.view.addSubview(toastLabel)
-        UIView.animate(withDuration: 8.0, delay: 0.1, options: .curveEaseOut, animations: {
-            toastLabel.alpha = 0.0
-        }, completion: {(isCompleted) in
-            toastLabel.removeFromSuperview()
-        })
+        self.view.makeToast(message, duration: 3.0, position: .bottom, style: ToastStyle())
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -269,9 +250,7 @@ class ProductShippingInformation: UIViewController, UITableViewDelegate, UITable
                     store_url = dictionary["StoreURL"] as! String
                     store_link.addAttribute(.link, value: String(dictionary["StoreURL"]!), range: NSMakeRange(0, store_link.length))
                     information_data.append(store_link)
-//                    information_data.append(NSMutableAttributedString(string: store_name,
-//                                                                     attributes:[NSAttributedString.Key.link:
-//                                                                        URL(string: String(dictionary["StoreURL"]!))!]))
+
                 } else if current.key == "Return Within" {
                     if let range = current.value.range(of: "within ") {
                         let returns_within = current.value[range.upperBound...]
@@ -359,16 +338,26 @@ class ProductShippingInformation: UIViewController, UITableViewDelegate, UITable
     }
     
     @objc func facebook_share(sender: UIBarButtonItem!) {
-        var search_url = "https://www.facebook.com/dialog/share?app_id=2161096860867733&display=popup&href="
-        search_url.append(self.item_url)
-        search_url.append("&quote=")
-        var message = "Buy "
-        message.append(self.selected_product_name)
-        message.append(" at ")
-        message.append(self.selected_product_price)
-        message.append(" from link below")
-        message = String(message).addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!
+        var search_url = "https://www.facebook.com/dialog/share?app_id=867509633598269&display=popup&href="
+        
+        search_url = [search_url, self.item_url, "&hashtag=CSCI571Spring2019Ebay" ,"&quote="].joined(separator: "")
+        
+        var message = [
+            "Buy",
+            self.selected_product_name,
+            "at",
+            self.selected_product_price,
+            "from Ebay!"].joined(separator: " ")
+        
+        var characterSet = CharacterSet.urlQueryAllowed
+        characterSet.remove(charactersIn: "?&=")
+        message = String(message).addingPercentEncoding(withAllowedCharacters: characterSet)!
+        
         search_url.append(String(message))
+        let hashtag = "#CSCI571Spring2019Ebay".addingPercentEncoding(withAllowedCharacters: characterSet)!
+        search_url.append("&hashtag="+hashtag)
+
+        
         guard let url = URL(string: String(search_url)) else { return }
         UIApplication.shared.open(url)
     }
@@ -519,17 +508,6 @@ class ProductShippingInformation: UIViewController, UITableViewDelegate, UITable
         }
     }
     
-    
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }
 
 extension UIImage {

@@ -2,6 +2,7 @@ import UIKit
 import SwiftSpinner
 import Alamofire
 import SwiftyJSON
+import Toast_Swift
 
 class GoogleProductPhotosController: UIViewController {
     
@@ -45,7 +46,6 @@ class GoogleProductPhotosController: UIViewController {
         if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
             var wishlist = UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") as! [String: wishlist_table_cell_contents]
             if wishlist.count != 0 {
-                //                print(wishlist[String(sender.tag)])
                 if wishlist[self.selected_product_id] != nil {
                     let wish_list_button = UIButton.init(type: .custom)
                     wish_list_button.setImage(UIImage.init(named: "wishListFilled")?.maskWithColor(color: UIColor(name: "pureblue")!), for: .normal)
@@ -88,7 +88,6 @@ class GoogleProductPhotosController: UIViewController {
         SwiftSpinner.show(delay: 0.0, title: "Fetching Google Images...", animated: true)
         
         DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + 4.0) {
-            
             if self.product_photos.count != 0 {
                 for index in 0 ..< self.product_photos.count {
                     let imageUrl:URL = URL(string: self.product_photos[index])!
@@ -124,29 +123,7 @@ class GoogleProductPhotosController: UIViewController {
     }
     
     func show_toast_message(message : String) {
-        let toastLabel = UILabel()
-        toastLabel.frame = CGRect(x: self.view.frame.size.width/11,
-                                  y: self.view.frame.size.height - self.view.frame.size.height/4.75,
-                                  width: self.view.frame.size.width/1.2,
-                                  height: 300)
-        toastLabel.backgroundColor = UIColor.black.withAlphaComponent(1)
-        toastLabel.textColor = UIColor.white
-        toastLabel.textAlignment = .center
-        toastLabel.font = UIFont(name: "Montserrat-Light", size: 1.0)
-        toastLabel.text = message
-        toastLabel.adjustsFontSizeToFitWidth = true
-        toastLabel.alpha = 1.0
-        toastLabel.layer.cornerRadius = 7
-        toastLabel.clipsToBounds  =  true
-        toastLabel.lineBreakMode = .byWordWrapping
-        toastLabel.numberOfLines = 4
-        toastLabel.sizeToFit()
-        self.view.addSubview(toastLabel)
-        UIView.animate(withDuration: 8.0, delay: 0.1, options: .curveEaseOut, animations: {
-            toastLabel.alpha = 0.0
-        }, completion: {(isCompleted) in
-            toastLabel.removeFromSuperview()
-        })
+        self.view.makeToast(message, duration: 3.0, position: .bottom, style: ToastStyle())
     }
     
     func google_photos(completion: @escaping(_ : [String]) -> ())
@@ -175,14 +152,14 @@ class GoogleProductPhotosController: UIViewController {
     @objc func facebook_share(sender: UIBarButtonItem!) {
         var search_url = "https://www.facebook.com/dialog/share?app_id=867509633598269&display=popup&href="
         
-        search_url = [search_url, self.item_url, "&quote="].joined(separator: "")
+        search_url = [search_url, self.item_url, "&hashtag=CSCI571Spring2019Ebay","&quote="].joined(separator: "")
         
         var message = [
             "Buy",
             self.selected_product_name,
             "at",
             self.selected_product_price,
-            "from link below"].joined(separator: " ")
+            "from Ebay!"].joined(separator: " ")
         
         var characterSet = CharacterSet.urlQueryAllowed
         characterSet.remove(charactersIn: "?&=")
@@ -190,13 +167,13 @@ class GoogleProductPhotosController: UIViewController {
         
         search_url.append(String(message))
         
-        
+        let hashtag = "#CSCI571Spring2019Ebay".addingPercentEncoding(withAllowedCharacters: characterSet)!
+        search_url.append("&hashtag="+hashtag)
+
         guard let url = URL(string: String(search_url)) else { return }
         UIApplication.shared.open(url)
     }
-    
-    
-    
+
     @objc func wish_list(sender: UIBarButtonItem!) {
         if UserDefaults.standard.object([String: wishlist_table_cell_contents].self, with: "wishlist") != nil {
             var wishlist = UserDefaults.standard.object(
