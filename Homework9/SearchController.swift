@@ -1,11 +1,3 @@
-//
-//  ViewController.swift
-//  Homework9
-//
-//  Created by usc on 4/5/19.
-//  Copyright © 2019 usc. All rights reserved.
-//
-
 import UIKit
 import Alamofire
 import SwiftyJSON
@@ -96,7 +88,7 @@ class SearchController: UIViewController, UITextFieldDelegate, UITableViewDelega
         "Music" :"music",
         "Video Games & Consoles" :"games"
     ]
-
+    
     let product_categories:[[String]] = [["All Categories",
                                           "Art",
                                           "Baby",
@@ -213,7 +205,7 @@ class SearchController: UIViewController, UITextFieldDelegate, UITableViewDelega
             //            print(self.zip_code)
         }
     }
-
+    
     @IBAction func toggleSwitch(_ sender: UISwitch) {
         var isHidden = false
         if !custom_location_switch.isOn {
@@ -287,7 +279,7 @@ class SearchController: UIViewController, UITextFieldDelegate, UITableViewDelega
             show_toast_message(message: "Keyword Is Mandatory")
             return
         }
-
+        
         if custom_location_switch.isOn && (zip_code.trimmingCharacters(in: CharacterSet.whitespaces)).isEmpty {
             show_toast_message(message: "Zipcode Is Mandatory")
             return
@@ -304,33 +296,33 @@ class SearchController: UIViewController, UITextFieldDelegate, UITableViewDelega
             prod_details.selected_product_id = String(product.item_id!)
             prod_details.handling_time = String(product.handling_time!)
             prod_details.global_shipping = String(product.global_shipping!)
-
+            
             prod_details.shipping = String(product.shipping!)
             prod_details.shipping_symbol = String(product.shipping_symbol!)
             break
-
+            
         case "product_list_segue":
             let plc = segue.destination as! ProductListViewController
             plc.product_keyword = product_keyword
             plc.product_category = category_map[product_category]!
-
+            
             plc.local_pickup = String(local_pickup)
             plc.free_shipping = String(free_shipping)
-
+            
             plc.new_condition = String(new_condition)
             plc.used_condition = String(used_condition)
             plc.unspecified_condition = String(unspecified_condition)
-
+            
             plc.distance = distance
             plc.zip_code = zip_code
-
+            
             break
-
+            
         default:
             break
         }
     }
-
+    
     func clear_checkbox(checkbox: UIButton!,  flag: inout Bool) {
         checkbox.isSelected = false
         flag = false
@@ -431,7 +423,7 @@ class SearchController: UIViewController, UITextFieldDelegate, UITableViewDelega
                 with: "wishlist") as! [String: wishlist_table_cell_contents]
             
             if 0 != wishlist.count {
-
+                
                 var total_price = 0.0
                 wishlist_items = [wishlist_table_cell_contents]()
                 
@@ -462,7 +454,7 @@ class SearchController: UIViewController, UITextFieldDelegate, UITableViewDelega
                 wish_list_table.isHidden = false
                 wish_list_empty_label.isHidden = true
                 wish_list_table.reloadData()
-
+                
             }
             else {
                 wish_list_table.isHidden = true
