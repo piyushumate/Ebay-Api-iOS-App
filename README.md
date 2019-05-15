@@ -1,4 +1,4 @@
-# ebay-api-ios-app
+# Ebay API iOS application
 
 
 ![](giphy.gif)
